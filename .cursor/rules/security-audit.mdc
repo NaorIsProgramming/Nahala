@@ -1,0 +1,83 @@
+---
+description: Security and performance audit procedure. Use when asked to audit, review security, or do a pre-launch check.
+alwaysApply: false
+---
+
+# Security audit procedure
+
+Use this when asked to audit the project. Stack: Next.js (App Router), React, TypeScript, Tailwind, Better Auth, PostgreSQL with Drizzle ORM, self-hosted.
+
+## Process
+
+1. **Read-only first.** Do not change any code during the audit pass. Read the code and run non-destructive checks only.
+2. **Report before fixing.** Give a findings list grouped by severity (Critical, High, Medium, Low). For each finding include: the file and line, what the problem is, how it could be exploited, and the proposed fix.
+3. **Fix after approval.** Wait for the user to approve fixes, then apply them in small, separate changes.
+4. **Be honest about coverage.** State which areas you checked and which you could not (for example, production infrastructure, firewall rules, backups). Do not claim the project is "secure"; say what was and was not reviewed.
+5. **Do not hurt performance.** For every fix, say whether it affects performance (extra queries, forced dynamic rendering, bigger client bundle). Prefer fixes that are cheap. If a fix has a real performance cost, explain the trade-off and ask.
+
+## Checks
+
+### Access control
+- Every Server Action, Route Handler, and data-access function authenticates and authorizes inside itself, not only in the UI or middleware/proxy.
+- Every query for user data is scoped to the current user or organization (no IDOR).
+- Admin or privileged functionality checks the role on the server.
+- No endpoint trusts `userId`, `role`, `isAdmin`, price, or status values sent by the client.
+
+### Input and output
+- All external input (request bodies, search params, headers, uploads, webhooks) is validated with Zod on the server.
+- Schemas for user-submitted data omit or allowlist server-controlled fields.
+- No raw SQL built by string concatenation. Raw SQL uses parameterized `sql` templates.
+- No `dangerouslySetInnerHTML` with unsanitized content. No `eval` or `new Function`.
+- No server-side fetch of user-supplied URLs without an allowlist. No file paths built from user input.
+- Uploads: size limits, content-type validation, generated filenames, safe storage location.
+
+### Authentication and sessions
+- Better Auth is configured with a strong `BETTER_AUTH_SECRET` and the correct base URL, and trusted origins are set deliberately.
+- Rate limiting is enabled on sign-in, sign-up, password reset, and email-sending flows.
+- Session cookies are `HttpOnly`, `Secure` in production, with appropriate `SameSite`.
+- Password reset and email verification tokens expire and are single-use.
+- No tokens or sessions stored in `localStorage`.
+
+### Secrets and configuration
+- No secrets, keys, or credentials in source, in git history, or in `NEXT_PUBLIC_` variables.
+- `.env*` files are gitignored; `.env.example` contains no real values.
+- Environment variables are validated at startup.
+- Server-only modules use `import "server-only"`, and no client component imports database or secret-bearing code.
+- Search the repo for likely secrets (API keys, private keys, connection strings).
+
+### Headers, CORS, and transport
+- Security headers are set (CSP, `X-Content-Type-Options`, `Referrer-Policy`, HSTS in production, frame protection).
+- CORS is not `*` on routes using cookies or returning private data.
+- Production runs over HTTPS only.
+
+### Database
+- The application's database user has least privilege (not a superuser).
+- Postgres is not exposed publicly; only the app can reach it.
+- Foreign keys, unique constraints, and `NOT NULL` are enforced in the schema.
+- Migrations are committed, and none are destructive without a plan.
+- Backups exist and have been restore-tested (flag if unknown).
+
+### Dependencies
+- Run the package manager's audit command and report known vulnerabilities in direct and transitive dependencies.
+- Flag unmaintained, suspicious, or unnecessary packages.
+- Confirm the lockfile is committed.
+
+### Errors and logging
+- Users never see stack traces, SQL errors, or internal messages.
+- Logs do not contain passwords, tokens, session IDs, or personal data.
+- Error boundaries exist for the main routes.
+
+### Performance impact of security code
+- The session is fetched once per request and shared (for example with React's `cache()`).
+- No repeated auth or permission queries inside loops or per-row.
+- No unnecessary forcing of static pages to dynamic.
+- Rate-limit and origin checks are cheap.
+
+## Commands to run (non-destructive)
+
+- Type check and lint (for example `tsc --noEmit` and the project's lint script).
+- The package manager's dependency audit (for example `npm audit`, `pnpm audit`).
+- Search for secrets and risky patterns, such as `dangerouslySetInnerHTML`, `eval(`, `NEXT_PUBLIC_`, and string-concatenated SQL.
+- Production build, to confirm it succeeds and to check for unexpectedly large client bundles.
+
+Never run destructive commands, never connect to a production database, and never print secret values in the report (reference them by file and variable name only).
