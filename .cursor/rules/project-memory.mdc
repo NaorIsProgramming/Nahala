@@ -1,0 +1,49 @@
+---
+description: Project memory. How to read and maintain docs/project/STATE.md
+alwaysApply: true
+---
+
+# Project memory
+
+This project keeps its long-term memory in `docs/project/STATE.md`, not in chat history. Chats are disposable; this file is how a fresh chat learns what the project is and where it stands.
+
+Current project state (attached automatically by this rule):
+
+@docs/project/STATE.md
+
+## At the start of any non-trivial task
+
+- The project state above is your starting point. If it is missing or looks empty, read `docs/project/STATE.md` yourself.
+- Begin your first reply to a new task with one line stating the project's current status and the task you understand you are doing, so the user can see you loaded the state.
+- If the task has a plan or task brief (`docs/project/plans/` or `docs/project/tasks/`), read that too.
+- Then read the actual code you will touch. The code is the source of truth. `STATE.md` is only a map.
+- If `STATE.md` and the code disagree, trust the code, tell the user about the mismatch, and fix `STATE.md`.
+- If `STATE.md` does not exist yet, offer to create it from the template. Do not invent facts to fill it in; leave unknown sections as "unknown".
+
+## At the end of any task that changes the project
+
+Update `STATE.md` only if something a future chat needs to know has changed:
+- a feature was added, finished, or removed (update **Current status**)
+- the architecture or folder layout changed
+- a decision was made that is not obvious from the code (add it to **Key decisions** with the reason)
+- a known problem was found or fixed
+- the **Next up** list changed
+
+How to update:
+- Edit in place. Replace outdated information; do not append a running log or changelog.
+- Keep the whole file under about 150 lines. If it grows, compress older detail or move it to a separate file under `docs/project/` and link to it.
+- Write facts, not guesses. Mark anything unverified as "unverified".
+- Keep entries short: one line per decision, with the "why".
+- Tell the user in one or two lines what you changed in `STATE.md`.
+
+## Never put in STATE.md
+
+- Secrets, passwords, API keys, tokens, connection strings, or private user data.
+- Server IP addresses, internal hostnames, or anything else that helps an attacker. This file is committed to git.
+- Long code listings. Link to file paths instead.
+
+## Working style that goes with this
+
+- Prefer one focused task per chat. If a task grows beyond its original scope, say so and suggest splitting it.
+- For features that touch several parts of the app (database, auth, UI, deployment), plan before building. Use the `plan-and-delegate` skill when it is available.
+- Do not claim work is finished until you have run the project's type check, lint, and tests, and have reported the actual results.
