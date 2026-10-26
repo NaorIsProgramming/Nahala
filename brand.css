@@ -1,0 +1,87 @@
+/*
+ * Nahala brand tokens (Tailwind CSS v4, CSS-first theme), light and dark.
+ * Import once from app/globals.css:  @import "./brand.css";
+ * If the project uses Tailwind v3, move these values into theme.extend in
+ * tailwind.config instead. Check the installed version before editing.
+ *
+ * EXACT = taken from the logo. DERIVED = chosen to pass contrast, adjust freely.
+ * Contrast ratios are measured against the page background of the same theme.
+ */
+
+/* Dark mode is class-based: next-themes puts `.dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------- Light theme (default) ---------- */
+@theme {
+  /* Surfaces */
+  --color-background: #F4EFE6;          /* EXACT  logo background */
+  --color-surface: #FBF8F2;             /* DERIVED cards, panels, inputs */
+
+  /* Text */
+  --color-foreground: #5B2E1A;          /* EXACT  trunk brown, 9.9:1 */
+  --color-muted: #6B4A38;               /* EXACT  tagline brown, 6.9:1 */
+
+  /* Primary action: deep palm green */
+  --color-primary: #3F5E3A;             /* EXACT  6.4:1; white text on it 7.3:1 */
+  --color-primary-foreground: #FFFFFF;
+
+  /* Palm greens and date amber from the mark */
+  --color-palm: #5C7F52;                /* EXACT  decorative only, 4.0:1, never body text */
+  --color-palm-text: #4E6E45;           /* DERIVED green that is allowed for text, 5.0:1 */
+  --color-date: #C47A2C;                /* EXACT  decorative only, 3.0:1, never text or button fill */
+  --color-date-strong: #8F5410;         /* DERIVED amber for text or fills; white on it 6.1:1 */
+  --color-date-foreground: #FFFFFF;
+
+  /* Lines and states */
+  --color-border: #D9CFBF;              /* DERIVED dividers and card edges (decorative) */
+  --color-input: #8C7A68;               /* DERIVED form control edges, 3.6:1 (needs 3:1) */
+  --color-danger: #9B2C2C;              /* DERIVED errors, 6.6:1; white on it 7.5:1 */
+  --color-danger-foreground: #FFFFFF;
+
+  /* Shape: soft, organic, like the palm leaves */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+/* Rubik is loaded with next/font/google (subsets: latin + hebrew) and exposed as --font-rubik. */
+@theme inline {
+  --font-sans: var(--font-rubik), "Heebo", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------- Dark theme: warm dark brown, never pure black or neutral gray (all DERIVED) ---------- */
+.dark {
+  color-scheme: dark;
+
+  --color-background: #1C1410;          /* cream text on it 15.9:1 */
+  --color-surface: #271C16;             /* raised surfaces: lighter, not shadowed; cream text 14.5:1 */
+
+  --color-foreground: #F4EFE6;          /* the logo cream, reused as text */
+  --color-muted: #C9B8A6;               /* 8.6:1 on surface */
+
+  --color-primary: #8DB07F;             /* light palm green, 7.5:1 vs background */
+  --color-primary-foreground: #1C1410;  /* dark text on the green fill, 7.5:1 */
+
+  --color-palm: #6E9462;                /* decorative only */
+  --color-palm-text: #A5C298;           /* 8.5:1 on surface */
+  --color-date: #C47A2C;                /* decorative only (5.3:1 here, still kept off text for consistency) */
+  --color-date-strong: #E0A050;         /* amber text or fill, 7.4:1 on surface */
+  --color-date-foreground: #1C1410;     /* dark text on the amber fill, 8.1:1 */
+
+  --color-border: #4A3A30;              /* decorative dividers */
+  --color-input: #8C7A68;               /* form control edges, 4.0:1 on surface (needs 3:1) */
+  --color-danger: #F08A80;              /* 6.9:1 on surface */
+  --color-danger-foreground: #1C1410;   /* dark text on the danger fill, 7.5:1 */
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+}

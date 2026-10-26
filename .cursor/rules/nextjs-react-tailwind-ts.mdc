@@ -155,6 +155,19 @@ Our key libraries change quickly, so do not rely on memory for their APIs. Use t
 - Do not "fix" security by disabling caching or forcing every route dynamic. If a change would make a static or cached page dynamic, say so and ask first.
 - Never trade security for speed: no skipped auth checks, no client-side-only validation, no secrets in client bundles.
 
+# Services and API parity
+
+Every action a user can perform in the GUI (creating pallets and sorting stages, requesting reports, and so on) must also be available through the API. Do this with one thin shared layer, not with duplicated code or heavy architecture.
+
+- Each domain action is a plain async function in `lib/services/<domain>.ts`, one file per domain area (for example `pallets`, `sorting-stages`, `reports`), not one per table.
+- A service takes an explicit `actor` (the signed-in user or the API client, resolved by the caller) plus already-validated input. It checks that the actor may do this inside the service, runs the Drizzle queries, and returns typed data or a typed error result.
+- Zod input schemas live next to the service and are used by every entry point. Do not redefine validation in a wrapper.
+- Entry points stay thin. Server Components and Server Actions authenticate the session, parse input with the shared schema, and call the service. Route Handlers under `app/api/v1/**` authenticate the API credentials, parse with the same schema, call the same service, and map the result to HTTP status codes. No business logic in either.
+- Server Components call services directly. Never make an HTTP request from our own server code to our own API.
+- Lists and lookups that an API client would reasonably need also go through services. Purely presentational reads used by a single screen may query Drizzle directly.
+- Keep it light: plain functions only. No classes, no repository layer on top of Drizzle, no dependency injection, no generic CRUD factories, no DTO mapper layers, no interface with a single implementation. Do not add OpenAPI generation, extra API versions, or webhooks unless asked.
+- Reports and statistics: aggregate in SQL, not in JavaScript, and paginate or limit large results. If a report becomes slow, say so and ask before introducing background jobs.
+
 # Database (PostgreSQL + Drizzle ORM)
 
 The project is fully self-hosted. The database is PostgreSQL, accessed through Drizzle ORM. Do not introduce another ORM or a hosted database SDK (Prisma, Supabase client, Firebase, etc.).

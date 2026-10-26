@@ -1,0 +1,67 @@
+---
+description: Nahala brand and UI design rules. Applies to all UI work (components, pages, styles, icons, emails, PDFs).
+alwaysApply: true
+---
+
+# Nahala brand and UI design
+
+Product: **Nahala** (Hebrew: נחלה), a Hebrew-language management system for an agricultural packing facility (pallets of fruit moving through sorting and packaging stages). The logo is a palm tree with a date cluster on a warm cream ground. Every screen should feel like it belongs to that logo: warm, earthy, calm and practical, not generic SaaS.
+
+## Single source of truth
+
+- Colors, radii and fonts live in `app/brand.css` (Tailwind theme tokens, light and dark). Use the semantic classes (`bg-background`, `bg-surface`, `text-foreground`, `text-muted`, `bg-primary text-primary-foreground`, `text-palm-text`, `bg-date-strong text-date-foreground`, `border-border`, `border-input`, `text-danger`).
+- The same class works in light and dark mode, because `app/brand.css` redefines the tokens under `.dark`. Do not write per-component `dark:` color overrides for brand colors. If something looks wrong in dark mode, fix the token.
+- Never hardcode hex values, `rgb()`, `text-white`, `text-black`, or Tailwind's default palette colors (`gray-*`, `blue-*`, `slate-*`, etc.) in components. If a needed color is missing, propose a new token in `app/brand.css` and ask before inventing one inline.
+- Logo files: `public/brand/logo-mark.svg` (light mode), `public/brand/logo-mark-dark.svg` (dark mode, reversed colors), and `app/icon.svg` (favicon: the mark on a cream tile). Render the logo through one shared component, `components/brand/logo.tsx`, and reuse it everywhere. Never redraw, recolor, stretch, rotate, outline or add effects to the logo, and never replace it with an emoji or a stock icon.
+
+## Language and direction (Hebrew first)
+
+- The UI is Hebrew and RTL by default: `<html lang="he" dir="rtl">`. All user-facing text is in Hebrew. Code, identifiers, comments and API field names are in English.
+- Use logical Tailwind utilities only: `ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `text-start`, `border-s`, `rounded-s-*`. Never `ml-*`, `mr-*`, `pl-*`, `pr-*`, `left-*`, `right-*`, `text-left`, `text-right`.
+- Numbers, dates, SKUs, pallet IDs and any Latin text inside Hebrew must not reorder: wrap them in `<bdi>` or give them `dir="ltr"`. Numeric table columns use `tabular-nums` and consistent alignment.
+- Mirror directional icons (arrows, chevrons, back and forward). Do not mirror the logo or numerals.
+- Hebrew typography: body line-height at least 1.5, no italics for Hebrew text, and no uppercase or letter-spaced label style on Hebrew (that style is for Latin text only).
+- Check every screen in RTL with real Hebrew strings, including long ones, before calling it done.
+
+## Color rules (contrast verified in both themes)
+
+- Page background is the warm `background`, never pure white or pure black. Cards, panels and inputs use `surface`. Default text is `foreground`; secondary text is `muted`.
+- Primary buttons and key links: `bg-primary text-primary-foreground`. Always use the foreground token for text on a fill, because it flips between white and dark across themes.
+- `palm` and `date` are decorative only: illustration, icons next to text, chart fills, dividers, large shapes. They fail contrast for text in the light theme. Never use them for text, for button fills with text, or as the only indicator of state.
+- For amber or green text and filled badges, use `date-strong` (with `date-foreground`) or `palm-text`.
+- Form control borders use `input` (a visible 3:1 edge), not `border`.
+- Errors use `danger` (with `danger-foreground` on a filled danger background). Always pair a status color with an icon or label, never color alone.
+- No cold grays, blues, purples, neon, gradients, glassmorphism or heavy shadows. Prefer flat surfaces with 1px `border` lines.
+
+## Dark mode
+
+- Theme is class-based (`.dark` on `<html>`). Use `next-themes` (an approved dependency for this purpose) with `attribute="class"`, `defaultTheme="system"`, `enableSystem`, and `suppressHydrationWarning` on `<html>`. Check its current docs with Context7, since setup details change with React and Next.js versions, and make sure there are no hydration or script warnings in the console.
+- Provide a light, dark and system theme toggle in the app shell, and keep it keyboard accessible.
+- Dark surfaces are the warm dark browns from `app/brand.css`. Raise elevation with the lighter `surface` tone and a 1px border, not with shadows.
+- The `Logo` component shows `logo-mark.svg` in light mode and `logo-mark-dark.svg` in dark mode, switching with CSS (`dark:hidden` and `hidden dark:block`), not with JavaScript, to avoid a flash. Never put the light mark on a dark background or the dark mark on a light one.
+- Images and illustrations must work in both themes. No pure-white image backgrounds in dark mode.
+- Check every screen in both themes before calling it done.
+
+## Typography
+
+- Font is Rubik only (Latin and Hebrew), loaded via `next/font/google` with the `latin` and `hebrew` subsets. Do not add other font families.
+- Weights: 400 body, 500 labels and subheadings, 600 headings and the wordmark. Headings use slightly tight tracking (about -0.02em).
+- Body text is at least 16px. Never set long text in all caps.
+
+## Shape and feel
+
+- Rounded, organic shapes: `rounded-md` for controls, `rounded-lg` for cards. No sharp corners, and not everything fully pill-shaped.
+- Generous spacing and clear hierarchy. Data-heavy screens (pallet lists, sorting stages, reports) stay dense but readable: sticky headers, aligned numbers, clear row states.
+- Icons: one consistent set (the one already in the project, or lucide-react if none), 1.5 to 2px strokes, rounded caps, colored with `foreground`, `muted` or `primary`. No emoji in the UI.
+- Empty, loading and error states use the same palette and a calm, plain tone of voice in Hebrew.
+
+## Accessibility
+
+- Text contrast at least 4.5:1 (3:1 for 24px+ text and for UI component edges). The tokens above were checked in both themes; do not bypass them.
+- Visible `focus-visible` rings using `primary`. Touch targets at least 44px. Real `<button>` and `<a>` elements, with Hebrew `aria-label`s on icon-only buttons.
+
+## When making UI
+
+- Reuse existing components in `components/ui/` before creating new ones. New reusable pieces go there and use the tokens.
+- If a screen needs something this file does not cover (charts, status palettes, print or PDF reports), propose a small addition to `app/brand.css` and this rule, and ask before shipping it.
+- Do not claim a screen "matches the brand" without checking it against the rules above.
