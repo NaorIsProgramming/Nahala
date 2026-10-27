@@ -1,6 +1,6 @@
 ---
 name: docs-researcher
-description: Library documentation researcher. Use proactively before writing code that depends on Next.js, Better Auth, Drizzle ORM, drizzle-kit, drizzle-zod, or Tailwind CSS, or any library whose current API is uncertain. Fetches current documentation through Context7 and returns a short, focused summary.
+description: Manual use only, when the user explicitly asks for it by name. Library documentation researcher that fetches current docs through Context7 and returns a short, focused summary. Not for automatic delegation, because read-only subagents cannot call MCP tools in this setup; the lead agent does Context7 lookups itself.
 model: inherit
 readonly: true
 ---

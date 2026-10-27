@@ -9,7 +9,7 @@ In this project the main agent acts as the lead. It plans, delegates focused wor
 
 ## Delegate automatically
 
-- **Before writing code that uses** Next.js, Better Auth, Drizzle (including drizzle-kit and drizzle-zod) or Tailwind: delegate the lookup to `docs-researcher`.
+- **Before writing code that uses** Next.js, Better Auth, Drizzle (including drizzle-kit and drizzle-zod) or Tailwind: look up the current docs yourself with the Context7 tools, following the "Documentation lookup (Context7)" section of the main rules. Do not delegate this to `docs-researcher`: read-only subagents are blocked from calling MCP tools in this setup.
 - **After changes that touch** authentication, authorization, Server Actions, Route Handlers, queries, user input, uploads, cookies, headers, environment variables or dependencies: delegate a review to `security-reviewer`.
 - **When** `db/schema` or migration files change, and always **before any migration is applied**: delegate to `migration-reviewer`.
 - **Before telling the user a task is done:** delegate to `verifier`.
@@ -20,7 +20,7 @@ Do not delegate trivial edits (typos, copy changes, small styling tweaks).
 
 - Subagents do not see this conversation. Give each one a self-contained prompt: the goal, the files or diff to look at, the relevant plan or task brief path, and what you want back. Tell it to read `docs/project/STATE.md` and `.cursor/rules/`.
 - Never put secrets in a subagent prompt.
-- Read-only reviewers (`security-reviewer`, `migration-reviewer`, `docs-researcher`) may run in parallel with each other.
+- Read-only reviewers (`security-reviewer`, `migration-reviewer`) may run in parallel with each other.
 - Subagents that write code must run one at a time, and never in parallel on tasks that touch the same files or database tables.
 - A subagent must never run deploy commands, production migrations, or anything against a non-local database. Those always need the user's explicit approval.
 

@@ -4,7 +4,7 @@
 > Keep this under ~150 lines. Edit in place; do not turn it into a changelog.
 > Never put secrets, credentials, or server addresses here.
 
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 
 ## What this app is
 
@@ -14,28 +14,38 @@ Users and roles: <TODO: who uses it (e.g. operators, supervisors, admins) and wh
 
 ## Stack
 
-- Next.js (App Router), React, TypeScript, Tailwind CSS
-- Better Auth (self-hosted, no external auth service)
-- PostgreSQL with Drizzle ORM
+- Next.js 16.4.3 (App Router), React 19.3.0, TypeScript, Tailwind CSS 4.3.3
+- Better Auth (self-hosted, no external auth service) — not installed yet
+- PostgreSQL with Drizzle ORM — not installed yet
 - Fully self-hosted. Deployment target: <TODO, e.g. VPS with Docker Compose>
 
 ## Current status
 
-- Project folder is empty. Nothing is built yet.
-- Not started: scaffold, database, auth, security baseline, all app features.
+- Scaffold is in place: Hebrew RTL shell, Rubik, brand tokens, logo, and a light / dark / system toggle. The home page is a placeholder.
+- Not started: database, auth, security baseline, all app features.
 
 ## Architecture map
 
-Planned layout (update as it becomes real):
+What exists now:
 
-- `app/` : routes, layouts, route handlers
+- `app/layout.tsx`, `app/page.tsx`, `app/globals.css` : root shell and placeholder home page
+- `app/brand.css` : Tailwind v4 theme tokens (light and dark)
+- `app/icon.svg` : favicon
+- `public/brand/` : `logo-mark.svg` and `logo-mark-dark.svg`
+- `components/brand/logo.tsx` : logo, switched with CSS for dark mode
+- `components/theme-toggle.tsx` : light / dark / system toggle
+- `lib/utils.ts` : `cn()` helper
+- `docs/project/` : this file, plans, and task briefs
+
+Planned, not created yet:
+
 - `components/ui/` : generic reusable primitives
-- `components/` or `features/<name>/` : feature-specific components
+- `features/<name>/` : feature-specific components
 - `db/index.ts` : the single shared database client (server-only)
 - `db/schema/` : Drizzle table definitions, split by domain
 - `lib/auth.ts` : Better Auth server instance
 - `lib/auth-client.ts` : Better Auth client
-- `docs/project/` : this file, plans, and task briefs
+- `lib/services/` : one plain function file per domain area
 
 ## Key decisions
 
@@ -44,6 +54,8 @@ Planned layout (update as it becomes real):
 - 2026-10-26 PostgreSQL + Drizzle over Prisma, because the schema is plain TypeScript and it pairs well with Better Auth's Drizzle adapter.
 - 2026-10-26 PostgreSQL is never exposed to the internet. Only the app server has public ports.
 - 2026-10-26 Library docs are pulled from Context7 instead of relying on model memory.
+- 2026-10-26 Scaffold uses Tailwind v4 (CSS-first tokens in `app/brand.css`) and `next-themes` with `attribute="class"`, because dark mode is a `.dark` class on `<html>`.
+- 2026-10-26 `next.config.ts` sets `agentRules: false`, so `next dev` does not generate `AGENTS.md`.
 
 ## Conventions not obvious from the code
 
@@ -55,17 +67,23 @@ Planned layout (update as it becomes real):
 
 ## Known issues and risks
 
-- None yet. The owner has not set up backups or the production server.
+- The owner has not set up backups or the production server.
+- When security headers are added, a Content-Security-Policy will block the `next-themes` inline script unless `ThemeProvider` gets a nonce.
 
 ## Next up
 
-1. Define user roles, the domain model (pallets, the two sorting and packaging stages, reports), and how API clients authenticate.
-2. Scaffold the Next.js project and commit it.
-3. Add PostgreSQL (Docker Compose, not publicly exposed) and Drizzle.
-4. Add Better Auth with the Drizzle adapter.
-5. Add the security baseline (headers, env validation, rate limiting).
-6. Build features.
+1. Approve `docs/project/plans/foundation.md` (written 2026-10-27, not started).
+2. Commit the scaffold. It is still uncommitted.
+3. Implement the foundation tasks in that plan, in order.
+4. Then define roles, the domain model, and how API clients authenticate.
+5. Build features.
 
 ## Commands
 
-- Not set up yet. Add dev, type check, lint, test, and migration commands once the scaffold exists.
+- `npm run dev` — dev server
+- `npm run build` — production build
+- `npm run start` — serve the production build
+- `npm run lint` — ESLint
+- `npm run typecheck` — `tsc --noEmit`
+- Tests: not set up yet
+- Migrations: not set up yet
