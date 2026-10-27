@@ -22,6 +22,7 @@ Users and roles: <TODO: who uses it (e.g. operators, supervisors, admins) and wh
 ## Current status
 
 - Scaffold is in place: Hebrew RTL shell, Rubik, brand tokens, logo, and a light / dark / system toggle. The home page is a placeholder.
+- Foundation plan approved and briefs written (`docs/project/plans/foundation.md`, `docs/project/tasks/`). Implementation has not started.
 - Not started: database, auth, security baseline, all app features.
 
 ## Architecture map
@@ -56,6 +57,9 @@ Planned, not created yet:
 - 2026-10-26 Library docs are pulled from Context7 instead of relying on model memory.
 - 2026-10-26 Scaffold uses Tailwind v4 (CSS-first tokens in `app/brand.css`) and `next-themes` with `attribute="class"`, because dark mode is a `.dark` class on `<html>`.
 - 2026-10-26 `next.config.ts` sets `agentRules: false`, so `next dev` does not generate `AGENTS.md`.
+- 2026-10-27 Dev Postgres is `postgres:18`, volume mounted at `/var/lib/postgresql` (`PGDATA` is `/var/lib/postgresql/18/docker`). Dev compose publishes `127.0.0.1:5432:5432` only. Production compose publishes no database port and pins an exact image version.
+- 2026-10-27 Public sign-up stays off. The local bootstrap user is created only by a seed that calls Better Auth's API. No roles in this work. How the first production user is created belongs in the deployment plan.
+- 2026-10-27 Static CSP, with `'unsafe-inline'` only on scripts and styles, so `next-themes` keeps working. A nonce CSP is reconsidered in the foundation audit and is not adopted without a new approval.
 
 ## Conventions not obvious from the code
 
@@ -68,14 +72,14 @@ Planned, not created yet:
 ## Known issues and risks
 
 - The owner has not set up backups or the production server.
-- When security headers are added, a Content-Security-Policy will block the `next-themes` inline script unless `ThemeProvider` gets a nonce.
+- Static CSP will include `'unsafe-inline'` for scripts and styles so the `next-themes` script can run. A nonce policy is a later decision; it would force dynamic rendering.
 
 ## Next up
 
-1. Approve `docs/project/plans/foundation.md` (written 2026-10-27, not started).
-2. Commit the scaffold. It is still uncommitted.
-3. Implement the foundation tasks in that plan, in order.
-4. Then define roles, the domain model, and how API clients authenticate.
+1. Commit the scaffold. It is still uncommitted. That is not one of the foundation tasks.
+2. Implement the foundation briefs in order, starting with `docs/project/tasks/01-postgres-and-env.md`.
+3. Then define roles, the domain model, and how API clients authenticate.
+4. Deployment plan: how the first user is created on the production server, and an exact Postgres image pin with no published database port.
 5. Build features.
 
 ## Commands

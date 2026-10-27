@@ -1,6 +1,6 @@
 # Foundation
 
-Status: awaiting approval. Do not implement until this plan is approved.
+Status: approved 2026-10-27. Briefs are in `docs/project/tasks/`. Implementation has not started.
 
 The scaffold exists. `npm run build` passed on 2026-10-27 (Next.js 16.4.3, four static routes). No application code is part of this planning step.
 
@@ -38,9 +38,9 @@ The docs-researcher subagents could not call Context7 (they were blocked as non-
 
 PostgreSQL: the current stable major is **18** (latest minor **18.6**, released 2026-08-13). PostgreSQL 19 is RC 1 (2026-10-15), with general availability planned for 2026-11-19. Do not use 19.
 
-## Dependencies to approve
+## Approved dependencies
 
-Installing these is part of implementation, after approval.
+Approved with the plan. Install them during implementation, at these versions.
 
 | Package | Version | Where | Why |
 | --- | --- | --- | --- |
@@ -59,7 +59,11 @@ No other packages. Do not add `tsx`, `pg`, `drizzle-zod`, or the Better Auth adm
 
 ### Database
 
-`docker-compose.yml` runs the official image `postgres:18` (major 18, not `latest`, not 19). Named volume `nahala-pg-data`. Healthcheck uses `pg_isready`.
+`docker-compose.yml` is the dev file. It runs the official image `postgres:18` (major 18, not `latest`, not 19). Named volume `nahala-pg-data`. Healthcheck uses `pg_isready`.
+
+Mount that volume at `/var/lib/postgresql`. On the official `postgres:18` image, `PGDATA` is `/var/lib/postgresql/18/docker` and the image `VOLUME` is `/var/lib/postgresql` (Docker Hub image docs and the 18 Dockerfile). Do not mount `/var/lib/postgresql/data`. That path is for PostgreSQL 17 and older; on 18 a mount there does not hold the data directory.
+
+Dev compose publishes `127.0.0.1:5432:5432` only. Do not publish `5432:5432`. This file is dev-only. The production compose file, written later, publishes no database port and pins an exact image version (the patch, not the floating `postgres:18` tag). Do not write the production file in this plan.
 
 The official image makes `POSTGRES_USER` a superuser. Leave that as the default `postgres` user, used only to boot the data directory. An init script in `docker/postgres/`, mounted at `/docker-entrypoint-initdb.d`, creates:
 
@@ -67,9 +71,7 @@ The official image makes `POSTGRES_USER` a superuser. Leave that as the default 
 - `nahala_migrator`: `LOGIN`, `NOSUPERUSER`, owner of `nahala`, allowed to create objects in `public`
 - `nahala_app`: `LOGIN`, `NOSUPERUSER`, `CONNECT` on `nahala`, `USAGE` on `public`, and `SELECT` / `INSERT` / `UPDATE` / `DELETE` on tables the migrator creates (`ALTER DEFAULT PRIVILEGES`). No `CREATE`, no `DROP`.
 
-The init script reads passwords from the environment. It does not contain passwords. It runs only when the volume is empty.
-
-Recommended publish: `127.0.0.1:5432:5432`. That is loopback on the host, so another machine cannot connect, and `drizzle-kit` on the host can. This is open question 3. Do not publish `5432:5432` (that binds all interfaces).
+The init script reads passwords from the environment. It does not contain passwords. It runs only when the volume is empty. Pass them into `psql` as quoted variables (`:'name'`), not by string-concatenating SQL.
 
 The Next.js process uses `DATABASE_URL` (the app role). Drizzle Kit uses `MIGRATE_DATABASE_URL` (the migrator). Application code never reads `POSTGRES_PASSWORD`.
 
@@ -138,18 +140,19 @@ There is no role. The script creates one ordinary user who can sign in.
 1. Exit with a non-zero status if `NODE_ENV` is `production`.
 2. Exit if the `DATABASE_URL` host is not `localhost` or `127.0.0.1`.
 3. Only then set a process-local flag the auth config treats as permission to call `auth.api.signUpEmail`. The Next.js server never sets that flag, and production ignores it even if it is set.
-4. Read `SEED_USER_EMAIL` and `SEED_USER_PASSWORD` from the environment. Refuse a short password. Do not hardcode them.
-5. Create the user. A second run is a success if that email already exists.
+4. Read `SEED_USER_EMAIL` from the environment. No default. Exit if it is missing.
+5. Read `SEED_USER_PASSWORD` from the environment. If it is unset, prompt on the terminal without echoing. No default. Refuse a short password. Never print the password, including in errors, logs, or the prompt.
+6. Create the user by calling Better Auth's own server API (`auth.api.signUpEmail`). Do not hash the password yourself and do not insert into the auth tables. A second run is a success if that email already exists. Do not print the API body.
 
-Node is v22.22.1. Run the script with type stripping and `--conditions=react-server` so it may import modules that use `server-only`. No extra runner.
+Node is v22.22.1. Run the script with type stripping and `--conditions=react-server` so it may import modules that use `server-only`. No extra runner. Do not add a prompt library.
 
-This is the recommended approach. It needs confirmation (open question 1). The alternative `npx auth create-admin` is rejected here because it installs the admin plugin and writes a role.
+`npx auth create-admin` stays out. It requires the admin plugin and a role. How the first user is created on the production server is an open question for the deployment plan. This seed does not answer it.
 
 ### Security headers
 
 In `next.config.ts` `headers()`, for all routes:
 
-- `Content-Security-Policy` — static, not a nonce
+- `Content-Security-Policy` — static, not a nonce. `'unsafe-inline'` is allowed only on `script-src` and `style-src`. Every other directive stays strict: `default-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'none'`, `form-action 'self'`, plus `font-src 'self'`, `img-src 'self'`, and `connect-src 'self'`. Development adds `'unsafe-eval'` to `script-src` only.
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'`
@@ -162,7 +165,7 @@ The Next.js 16.2.9 CSP guide (closest Context7 tag; the app is 16.4.3) has two p
 
 `upgrade-insecure-requests` only in production. On local `http` it would upgrade the dev server to `https` and break it.
 
-`next-themes` injects an inline script. `STATE.md` already notes that a CSP without `'unsafe-inline'` or a nonce blocks it. The static policy above keeps the theme toggle working and keeps `/` static. Switching to a nonce is open question 2.
+`next-themes` injects an inline script. The static policy above keeps the theme toggle working and keeps `/` static. Task 7 reconsiders a nonce-based CSP and does not implement one.
 
 `import "server-only"` on `db/index.ts`, `lib/env.ts`, `lib/auth.ts`, and `lib/session.ts`.
 
@@ -188,7 +191,17 @@ Performance:
 
 ## Tasks
 
-Execute in order, one chat each, after approval. Each one leaves `npm run build` passing. Before library code, the executor looks up that task's API for the installed version. After auth, query, header, or env changes, run the security reviewer. Before applying a migration, run the migration reviewer. Before calling a task done, run the verifier.
+Briefs are written. Execute in order, one chat each. Each one leaves `npm run build` passing. Before library code, the executor looks up that task's API for the installed version. After auth, query, header, or env changes, run the security reviewer. Before applying a migration, run the migration reviewer. Before calling a task done, run the verifier.
+
+| Task | Brief | Status |
+| --- | --- | --- |
+| 1. Postgres and env validation | `docs/project/tasks/01-postgres-and-env.md` | not started |
+| 2. Drizzle client and migration workflow | `docs/project/tasks/02-drizzle-client.md` | not started |
+| 3. Better Auth schema, migration, and route | `docs/project/tasks/03-better-auth-schema.md` | not started |
+| 4. Hebrew sign-in, sign-out, and a protected page | `docs/project/tasks/04-sign-in.md` | not started |
+| 5. Security baseline | `docs/project/tasks/05-security-baseline.md` | not started |
+| 6. Bootstrap user | `docs/project/tasks/06-bootstrap-user.md` | not started |
+| 7. Security audit | `docs/project/tasks/07-security-audit.md` | not started |
 
 ### 1. Postgres and env validation
 
@@ -201,7 +214,8 @@ Depends on: nothing.
 Acceptance:
 
 - `docker compose up -d` reaches healthy.
-- `docker port` for `5432` is `127.0.0.1` only (or, if question 3 chooses otherwise, no published port and the same checks run from inside the compose network).
+- `docker port` for `5432` is `127.0.0.1` only.
+- The named volume is mounted at `/var/lib/postgresql`, and data is under `PGDATA` `/var/lib/postgresql/18/docker`.
 - As `nahala_app`, `rolsuper` is false and `CREATE TABLE` fails.
 - As `nahala_migrator`, `rolsuper` is false and `CREATE TABLE` succeeds. Drop that probe table.
 - With a valid `.env`, `npm run typecheck` and `npm run build` pass.
@@ -265,7 +279,7 @@ Depends on: 4.
 Acceptance:
 
 - `curl -sI` on `/` includes the CSP, `nosniff`, `Referrer-Policy`, and frame protection. Local responses do not include HSTS.
-- The CSP does not use a nonce, and there is no `proxy.ts`.
+- The CSP is the approved static policy (no nonce, no `proxy.ts`). `'unsafe-inline'` appears only on `script-src` and `style-src`.
 - In the browser, `/` and `/sign-in` still load, and the theme toggle still works in both themes.
 - Repeated `POST /api/auth/sign-in/email` eventually returns 429.
 - A sign-in attempt's `Set-Cookie` is `HttpOnly` and `SameSite=Lax`. On local `http` it is not `Secure`.
@@ -277,11 +291,12 @@ Goal: one local user, created only by the seed, with sign-up still disabled for 
 
 Files: `db/seed.ts`, `package.json` script, `.env.example`, and the `disableSignUp` branch in `lib/auth.ts`.
 
-Depends on: 5. Confirm open question 1 before writing this task's brief.
+Depends on: 5.
 
 Acceptance:
 
-- `npm run db:seed` creates the user. A second run exits 0 and does not create a duplicate.
+- `npm run db:seed` creates the user through Better Auth's API. A second run exits 0 and does not create a duplicate.
+- The password is never printed. There is no default password. A silent prompt works when `SEED_USER_PASSWORD` is unset.
 - `NODE_ENV=production npm run db:seed` exits non-zero and creates nothing.
 - A `DATABASE_URL` whose host is not `localhost` or `127.0.0.1` exits non-zero.
 - In the browser, that user can sign in, see `/app`, and sign out. After sign-out, `/app` redirects to `/sign-in`.
@@ -301,14 +316,18 @@ Acceptance:
 - Findings grouped by severity, each with file, line, impact, and a proposed fix. "None" is a valid result only with a coverage note.
 - `npm audit`, `npm run typecheck`, and `npm run lint` were run, and the real output is in the report.
 - The report says what was not reviewed (production host, firewall, backups).
+- The report reconsiders a nonce-based CSP (the `next-themes` inline script, and the cost of forcing every page dynamic) and does not implement one.
+
+## Decided
+
+- Dev image `postgres:18`. Volume at `/var/lib/postgresql`. Dev port `127.0.0.1:5432:5432`. Production compose, later, publishes no database port and pins an exact version.
+- Static CSP. `'unsafe-inline'` only on `script-src` and `style-src`. Other directives stay strict. Nonce CSP is reconsidered in task 7, not implemented here.
+- Local bootstrap user only, via Better Auth's API. Password from the environment or a silent prompt. No default, never printed. Sign-up stays off in the running app, including in development.
 
 ## Open questions
 
-1. **First user.** Confirm the seed above: an ordinary user, no admin plugin, no role, refused in production and refused when the database host is not local. Public sign-up stays off in the running app, including in development. Say if you would rather allow open sign-up on localhost only.
-2. **CSP.** Confirm the static policy, which includes `'unsafe-inline'` for scripts and styles so `next-themes` and the Next.js non-nonce guide keep working, and pages stay static. A nonce policy in `proxy.ts` is the stricter option and forces dynamic rendering. I will not add it unless you ask.
-3. **Postgres port.** Confirm `127.0.0.1:5432:5432` so host-side `drizzle-kit` and `psql` work. The alternative is no published port, and migrations run inside the compose network.
-4. **Image pin.** Confirm `postgres:18` (current stable major; today's minor is 18.6). The alternative is the patch pin `postgres:18.6`, which will not pick up later 18.x fixes until we bump it.
-5. **Roles.** Still unknown: who uses Nahala and what each may do. Not part of this plan. The bootstrap user is not an admin.
+1. **Production first user.** This seed refuses to run in production. How the first user is created on the production server is not decided. Solve it in the deployment plan.
+2. **Roles.** Still unknown: who uses Nahala and what each may do. Not part of this plan. The bootstrap user is not an admin.
 
 ## Assumptions unless you change them
 
