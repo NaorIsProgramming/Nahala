@@ -1,6 +1,6 @@
 # Foundation
 
-Status: approved 2026-10-27. Briefs are in `docs/project/tasks/`. Implementation has not started.
+Status: approved 2026-10-27. Tasks 1–5 are done. Tasks 6–7 are not started.
 
 The scaffold exists. `npm run build` passed on 2026-10-27 (Next.js 16.4.3, four static routes). No application code is part of this planning step.
 
@@ -195,11 +195,11 @@ Briefs are written. Execute in order, one chat each. Each one leaves `npm run bu
 
 | Task | Brief | Status |
 | --- | --- | --- |
-| 1. Postgres and env validation | `docs/project/tasks/01-postgres-and-env.md` | not started |
-| 2. Drizzle client and migration workflow | `docs/project/tasks/02-drizzle-client.md` | not started |
-| 3. Better Auth schema, migration, and route | `docs/project/tasks/03-better-auth-schema.md` | not started |
-| 4. Hebrew sign-in, sign-out, and a protected page | `docs/project/tasks/04-sign-in.md` | not started |
-| 5. Security baseline | `docs/project/tasks/05-security-baseline.md` | not started |
+| 1. Postgres and env validation | `docs/project/tasks/01-postgres-and-env.md` | done |
+| 2. Drizzle client and migration workflow | `docs/project/tasks/02-drizzle-client.md` | done |
+| 3. Better Auth schema, migration, and route | `docs/project/tasks/03-better-auth-schema.md` | done |
+| 4. Hebrew sign-in, sign-out, and a protected page | `docs/project/tasks/04-sign-in.md` | done |
+| 5. Security baseline | `docs/project/tasks/05-security-baseline.md` | done |
 | 6. Bootstrap user | `docs/project/tasks/06-bootstrap-user.md` | not started |
 | 7. Security audit | `docs/project/tasks/07-security-audit.md` | not started |
 

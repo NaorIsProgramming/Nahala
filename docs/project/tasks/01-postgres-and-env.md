@@ -1,6 +1,6 @@
 # 01 — Postgres and env validation
 
-Status: not started.
+Status: done.
 
 ## Goal
 

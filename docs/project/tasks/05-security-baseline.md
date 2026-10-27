@@ -1,6 +1,6 @@
 # 05 — Security baseline
 
-Status: not started. Depends on task 04.
+Status: done. Depends on task 04.
 
 ## Goal
 

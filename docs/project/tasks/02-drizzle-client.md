@@ -1,6 +1,6 @@
 # 02 — Drizzle client and migration workflow
 
-Status: not started. Depends on task 01.
+Status: done. Depends on task 01.
 
 ## Goal
 

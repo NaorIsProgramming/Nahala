@@ -1,6 +1,6 @@
 # 03 — Better Auth schema, migration, and route
 
-Status: not started. Depends on task 02.
+Status: done 2026-10-27. Depends on task 02.
 
 ## Goal
 

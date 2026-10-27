@@ -1,6 +1,6 @@
 # 04 — Hebrew sign-in, sign-out, and a protected page
 
-Status: not started. Depends on task 03.
+Status: done. Depends on task 03.
 
 ## Goal
 
