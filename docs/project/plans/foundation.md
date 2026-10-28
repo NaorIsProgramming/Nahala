@@ -1,6 +1,6 @@
 # Foundation
 
-Status: approved 2026-10-27. Tasks 1–5 are done. Tasks 6–7 are not started.
+Status: approved 2026-10-27. Tasks 1–6 are done. Task 7 is not started.
 
 The scaffold exists. `npm run build` passed on 2026-10-27 (Next.js 16.4.3, four static routes). No application code is part of this planning step.
 
@@ -200,7 +200,7 @@ Briefs are written. Execute in order, one chat each. Each one leaves `npm run bu
 | 3. Better Auth schema, migration, and route | `docs/project/tasks/03-better-auth-schema.md` | done |
 | 4. Hebrew sign-in, sign-out, and a protected page | `docs/project/tasks/04-sign-in.md` | done |
 | 5. Security baseline | `docs/project/tasks/05-security-baseline.md` | done |
-| 6. Bootstrap user | `docs/project/tasks/06-bootstrap-user.md` | not started |
+| 6. Bootstrap user | `docs/project/tasks/06-bootstrap-user.md` | done |
 | 7. Security audit | `docs/project/tasks/07-security-audit.md` | not started |
 
 ### 1. Postgres and env validation

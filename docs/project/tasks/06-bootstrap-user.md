@@ -1,6 +1,6 @@
 # 06 — Bootstrap user
 
-Status: not started. Depends on task 05.
+Status: done. Depends on task 05.
 
 ## Goal
 

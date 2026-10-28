@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node --env-file=.env --conditions=react-server --import ./db/register-seed.mjs ./db/seed.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.14",

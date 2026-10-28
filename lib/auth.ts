@@ -13,6 +13,19 @@ import { getEnv } from "@/lib/env";
 const env = getEnv();
 const authOrigin = new URL(env.BETTER_AUTH_URL).origin;
 
+/**
+ * The Next.js server never sets BOOTSTRAP_SIGN_UP, so public sign-up stays
+ * off. The seed sets that flag only in its own process, after it has refused
+ * production and a non-local database. Production ignores the flag.
+ */
+function isSignUpDisabled(): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return true;
+  }
+
+  return process.env.BOOTSTRAP_SIGN_UP !== "1";
+}
+
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
@@ -28,7 +41,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
+    disableSignUp: isSignUpDisabled(),
     minPasswordLength: 12,
   },
   rateLimit: {
