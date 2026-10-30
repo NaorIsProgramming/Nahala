@@ -2,8 +2,11 @@
   "name": "nahala",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.22.1"
+  },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
