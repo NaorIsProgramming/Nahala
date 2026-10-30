@@ -47,3 +47,11 @@ How to update:
 - Prefer one focused task per chat. If a task grows beyond its original scope, say so and suggest splitting it.
 - For features that touch several parts of the app (database, auth, UI, deployment), plan before building. Use the `plan-and-delegate` skill when it is available.
 - Do not claim work is finished until you have run the project's type check, lint, and tests, and have reported the actual results.
+
+## Deferred decisions and gaps
+
+`docs/project/todo.md` lists decisions and features we deliberately postponed. It is not loaded automatically.
+- Read it when planning a new feature, and when a task touches something it mentions.
+- If you notice a gap, contradiction or unclear point in the user's instructions, ask the user about it before building on an assumption. Do not silently decide it. Ask in one message, give your recommended default for each point, and keep trivial details out of it.
+- The user may answer, elaborate, or postpone a point. If they postpone it (or say "later"), add a short entry to todo.md with one or two lines of context, then continue.
+- When an item is resolved, remove it from todo.md, and record the decision in STATE.md if it affects future work.
