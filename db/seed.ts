@@ -1,67 +1,16 @@
 import { stdin, stdout } from "node:process";
 
+import { isLocalDatabaseUrl } from "../lib/database-host";
+
 const MIN_PASSWORD_LENGTH = 12;
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
 function fail(message: string): never {
   console.error(message);
   process.exit(1);
 }
 
-/**
- * Hosts postgres.js can dial. A comma after the first `@` selects those
- * hosts, not `URL.hostname`. Otherwise the WHATWG hostname is used, so a
- * `#` fragment cannot hide a remote host. The password is never read.
- */
-function databaseHosts(databaseUrl: string): string[] | undefined {
-  const schemeIndex = databaseUrl.indexOf("://");
-  if (schemeIndex === -1) {
-    return undefined;
-  }
-
-  const afterScheme = databaseUrl.slice(schemeIndex + 3);
-  const authorityEnd = afterScheme.search(/[?/]/);
-  const authority =
-    authorityEnd === -1 ? afterScheme : afterScheme.slice(0, authorityEnd);
-  const at = authority.indexOf("@");
-  let driverHost = at === -1 ? authority : authority.slice(at + 1);
-
-  try {
-    driverHost = decodeURIComponent(driverHost);
-  } catch {
-    return undefined;
-  }
-
-  if (driverHost.includes(",")) {
-    const hosts = driverHost.split(",").map((part) => {
-      if (part.startsWith("[")) {
-        const end = part.indexOf("]");
-        return end === -1 ? "" : part.slice(1, end);
-      }
-
-      const colon = part.indexOf(":");
-      return colon === -1 ? part : part.slice(0, colon);
-    });
-
-    return hosts.length > 0 ? hosts : undefined;
-  }
-
-  try {
-    const hostname = new URL(databaseUrl).hostname;
-    return hostname.length > 0 ? [hostname] : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function assertLocalDatabase(): void {
-  const hosts = databaseHosts(process.env.DATABASE_URL ?? "");
-  const isLocal =
-    hosts !== undefined &&
-    hosts.length > 0 &&
-    hosts.every((host) => LOCAL_HOSTS.has(host));
-
-  if (!isLocal) {
+  if (!isLocalDatabaseUrl(process.env.DATABASE_URL ?? "")) {
     fail(
       "Refusing to seed: DATABASE_URL host must be localhost or 127.0.0.1.",
     );
@@ -166,6 +115,10 @@ async function main(): Promise<void> {
   }
 
   const { auth } = await import("../lib/auth");
+  const { db } = await import("./index");
+  const { user } = await import("./schema");
+  const { eq } = await import("drizzle-orm");
+  const { ensureGlobalWriteGrant } = await import("../lib/seed-grant");
 
   try {
     await auth.api.signUpEmail({
@@ -175,23 +128,50 @@ async function main(): Promise<void> {
         password,
       },
     });
+    console.log(`Created user ${email}.`);
   } catch (error: unknown) {
-    if (isExistingUser(error)) {
-      console.log(`User already exists: ${email}.`);
-      process.exit(0);
+    if (!isExistingUser(error)) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Invalid environment variable:")
+      ) {
+        fail(error.message);
+      }
+
+      fail("Sign-up failed.");
     }
 
+    console.log(`User already exists: ${email}.`);
+  }
+
+  const existing = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, email))
+    .limit(1);
+  const userId = existing[0]?.id;
+  if (!userId) {
+    fail("Sign-up failed.");
+  }
+
+  try {
+    const grant = await ensureGlobalWriteGrant(userId);
+    console.log(
+      grant === "inserted"
+        ? "Added the global write grant."
+        : "Global write grant already present.",
+    );
+  } catch (error: unknown) {
     if (
       error instanceof Error &&
-      error.message.startsWith("Invalid environment variable:")
+      error.message === "Could not store the global write grant."
     ) {
       fail(error.message);
     }
 
-    fail("Sign-up failed.");
+    fail("Could not store the global write grant.");
   }
 
-  console.log(`Created user ${email}.`);
   process.exit(0);
 }
 

@@ -1,6 +1,6 @@
 # 07 — Security audit
 
-Status: not started. Depends on task 06.
+Status: finished.
 
 ## Goal
 

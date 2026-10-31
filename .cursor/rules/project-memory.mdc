@@ -50,8 +50,10 @@ How to update:
 
 ## Deferred decisions and gaps
 
-`docs/project/todo.md` lists decisions and features we deliberately postponed. It is not loaded automatically.
-- Read it when planning a new feature, and when a task touches something it mentions.
+Two files. Neither is loaded automatically.
+
+- `docs/project/todo.md` is the agent list. Read it when planning a new feature, and when a task touches something it mentions. Each entry is one or two lines: the question, and what not to build.
+- `docs/project/architect-todo.md` is the owner's reading copy of the same items. It holds the question, what was already decided, and what is blocked. Do not read that file at the start of a task. Open the one matching section when you need the reasoning behind a short entry you are already handling. Do not treat it as extra requirements.
 - If you notice a gap, contradiction or unclear point in the user's instructions, ask the user about it before building on an assumption. Do not silently decide it. Ask in one message, give your recommended default for each point, and keep trivial details out of it.
-- The user may answer, elaborate, or postpone a point. If they postpone it (or say "later"), add a short entry to todo.md with one or two lines of context, then continue.
-- When an item is resolved, remove it from todo.md, and record the decision in STATE.md if it affects future work.
+- The user may answer, elaborate, or postpone a point. If they postpone it (or say "later"), add the short entry to `todo.md` and the matching longer note to `architect-todo.md`, then continue.
+- When an item is resolved, remove it from both files, and record the decision in STATE.md if it affects future work.
