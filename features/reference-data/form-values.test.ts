@@ -6,6 +6,8 @@ import { nextFieldValues, type ReferenceFormValues } from "./form-values";
 const filled: ReferenceFormValues = {
   name: "ארגז תמרים",
   tareKilograms: "לא מספר",
+  netWeightKilograms: "עשר",
+  recommendedPackageAmount: "הרבה",
   countsInGrowerInventory: true,
 };
 
@@ -16,9 +18,22 @@ function error(field: ReferenceActionState["field"]): ReferenceActionState {
 describe("nextFieldValues", () => {
   it("clears only the tare when the weight check fails", () => {
     expect(nextFieldValues(filled, error("tareKilograms"), false)).toEqual({
-      name: "ארגז תמרים",
+      ...filled,
       tareKilograms: "",
-      countsInGrowerInventory: true,
+    });
+  });
+
+  it("clears only the net weight when that check fails", () => {
+    expect(nextFieldValues(filled, error("netWeightKilograms"), false)).toEqual({
+      ...filled,
+      netWeightKilograms: "",
+    });
+  });
+
+  it("clears only the recommended amount when that check fails", () => {
+    expect(nextFieldValues(filled, error("recommendedPackageAmount"), false)).toEqual({
+      ...filled,
+      recommendedPackageAmount: "",
     });
   });
 
@@ -46,6 +61,8 @@ describe("nextFieldValues", () => {
     expect(nextFieldValues(filled, { status: "success" }, true)).toEqual({
       name: "",
       tareKilograms: "",
+      netWeightKilograms: "",
+      recommendedPackageAmount: "",
       countsInGrowerInventory: true,
     });
   });

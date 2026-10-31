@@ -118,6 +118,8 @@ async function selectReference(
           name: packageTypes.name,
           isActive: packageTypes.isActive,
           tareGrams: packageTypes.tareGrams,
+          netWeightGrams: packageTypes.netWeightGrams,
+          recommendedPackageAmount: packageTypes.recommendedPackageAmount,
           countsInGrowerInventory: packageTypes.countsInGrowerInventory,
         })
         .from(packageTypes)
@@ -143,7 +145,12 @@ async function selectReference(
               ? [asc(palletTypes.name)]
               : [desc(palletTypes.isActive), asc(palletTypes.name)]),
           )
-      ).map((row) => ({ ...row, countsInGrowerInventory: null }));
+      ).map((row) => ({
+        ...row,
+        netWeightGrams: null,
+        recommendedPackageAmount: null,
+        countsInGrowerInventory: null,
+      }));
   }
 }
 
@@ -153,6 +160,8 @@ function mapNamed(
   return rows.map((row) => ({
     ...row,
     tareGrams: null,
+    netWeightGrams: null,
+    recommendedPackageAmount: null,
     countsInGrowerInventory: null,
   }));
 }
@@ -202,6 +211,8 @@ async function insertReference(
           .values({
             name: input.name,
             tareGrams: input.tareGrams,
+            netWeightGrams: input.netWeightGrams,
+            recommendedPackageAmount: input.recommendedPackageAmount,
             countsInGrowerInventory: input.countsInGrowerInventory,
             isActive: true,
           })
@@ -210,6 +221,8 @@ async function insertReference(
             name: packageTypes.name,
             isActive: packageTypes.isActive,
             tareGrams: packageTypes.tareGrams,
+            netWeightGrams: packageTypes.netWeightGrams,
+            recommendedPackageAmount: packageTypes.recommendedPackageAmount,
             countsInGrowerInventory: packageTypes.countsInGrowerInventory,
           }),
       );
@@ -225,7 +238,13 @@ function inserted(
   }
   return {
     ok: true,
-    data: { ...row, tareGrams: null, countsInGrowerInventory: null },
+    data: {
+      ...row,
+      tareGrams: null,
+      netWeightGrams: null,
+      recommendedPackageAmount: null,
+      countsInGrowerInventory: null,
+    },
   };
 }
 
@@ -236,7 +255,15 @@ function insertedPallet(
   if (!row) {
     throw new Error("reference-data insert returned no row");
   }
-  return { ok: true, data: { ...row, countsInGrowerInventory: null } };
+  return {
+    ok: true,
+    data: {
+      ...row,
+      netWeightGrams: null,
+      recommendedPackageAmount: null,
+      countsInGrowerInventory: null,
+    },
+  };
 }
 
 function insertedPackage(
@@ -244,7 +271,9 @@ function insertedPackage(
     id: string;
     name: string;
     isActive: boolean;
-    tareGrams: number;
+    tareGrams: number | null;
+    netWeightGrams: number | null;
+    recommendedPackageAmount: number | null;
     countsInGrowerInventory: boolean;
   }[],
 ): ReferenceResult<ReferenceRecord> {
@@ -304,7 +333,15 @@ async function updateReferenceRow(
       if (!row) {
         return notFound();
       }
-      return { ok: true, data: { ...row, countsInGrowerInventory: null } };
+      return {
+        ok: true,
+        data: {
+          ...row,
+          netWeightGrams: null,
+          recommendedPackageAmount: null,
+          countsInGrowerInventory: null,
+        },
+      };
     }
     case "package_types": {
       const rows = await db
@@ -313,6 +350,10 @@ async function updateReferenceRow(
           updatedAt,
           ...(input.name === undefined ? {} : { name: input.name }),
           ...(input.tareGrams === undefined ? {} : { tareGrams: input.tareGrams }),
+          ...(input.netWeightGrams === undefined ? {} : { netWeightGrams: input.netWeightGrams }),
+          ...(input.recommendedPackageAmount === undefined
+            ? {}
+            : { recommendedPackageAmount: input.recommendedPackageAmount }),
           ...(input.countsInGrowerInventory === undefined
             ? {}
             : { countsInGrowerInventory: input.countsInGrowerInventory }),
@@ -323,6 +364,8 @@ async function updateReferenceRow(
           name: packageTypes.name,
           isActive: packageTypes.isActive,
           tareGrams: packageTypes.tareGrams,
+          netWeightGrams: packageTypes.netWeightGrams,
+          recommendedPackageAmount: packageTypes.recommendedPackageAmount,
           countsInGrowerInventory: packageTypes.countsInGrowerInventory,
         });
       const row = rows[0];
@@ -343,7 +386,13 @@ function updatedNamed(
   }
   return {
     ok: true,
-    data: { ...row, tareGrams: null, countsInGrowerInventory: null },
+    data: {
+      ...row,
+      tareGrams: null,
+      netWeightGrams: null,
+      recommendedPackageAmount: null,
+      countsInGrowerInventory: null,
+    },
   };
 }
 

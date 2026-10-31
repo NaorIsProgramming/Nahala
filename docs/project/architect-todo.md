@@ -53,3 +53,15 @@ You want that owner to have no email, no password, and no way to open the screen
 ## 10. Access limited to specific packages
 
 Decide whether a user may be limited to certain package types, and whether those types should sit in groups. Pallet-intake grants do not filter by package. Anyone who can read a set sees every package type. Do not add package groups, and do not hide package types by user, until you decide this.
+
+## 11. Package net weight
+
+Each package type can store an optional net weight in grams. The package-type screen shows it. Initial sorting does not read it. Pallet net weight stays gross minus the package tare times the package amount, minus the pallet tare. A missing package tare counts as 0 in that formula.
+
+Do not build reports, grower balances, or any other use of the package net weight until the feature that needs it is specified.
+
+## 12. Date-based tare change
+
+On a package-tare change, you may later want an option to pick the date from which pallet net weight is recalculated with the new tare. Which date that is (`received_on` or something else), whether the day is included, and what happens to pallets before that date are not decided.
+
+Pallet intake does not do this. A tare change still rewrites voided pallets of that type immediately, and an active pallet keeps the tare and net from its last save until that set is saved again. Do not add a date control on the tare edit, and do not filter that update by date.

@@ -19,8 +19,8 @@ The net-weight module and the kilogram formatter must stay free of `server-only`
 
 - Saving the new-set form with no rows creates an empty active set and opens its detail.
 - A grid of about 40 rows submits once, through one add/update/remove call for the rows that changed, plus a header update when the header changed. Removing every row and saving leaves the set active and empty. Adding a row keeps the set UUID and mints a new pallet UUID. Editing a row keeps that pallet UUID.
-- A new row copies yield type, package type, pallet type, and package amount from the previous row. Pallet number and gross weight start empty.
-- Preview of zero can be saved. Preview below zero cannot, and the server agrees. After save, the detail kilograms equal the preview when tares did not change underneath. The preview does not clamp. Clamping is only the voided tare update.
+- A new row copies yield type, package type, pallet type, and package amount from the previous row. Pallet number and gross weight start empty. Choosing a package type fills the package amount with that type’s recommended count when one is set. The operator can change it. Changing the type afterward replaces the amount only when the new type has a recommendation. No recommendation leaves the current amount. The server does not reject an amount that differs from the recommendation.
+- Preview of zero can be saved. Preview below zero cannot, and the server agrees. After save, the detail kilograms equal the preview when tares did not change underneath. The preview does not clamp. Clamping is only the voided tare update. A package type with no tare previews and saves as tare 0.
 - Changing a package tare afterward changes a voided set’s stored net and leaves this active set’s stored net until that pallet is saved again.
 - Hebrew errors for a taken reference number, a taken pallet number, and a stale revision (`aria-invalid`, `aria-describedby`).
 - Browser, light and dark, including keyboard-only entry of two rows. `security-reviewer` has reviewed the action. `verifier` has run typecheck, lint, tests, and build. Quote the results.

@@ -69,13 +69,15 @@ Stored as integer grams. The screen shows kilograms, up to three decimal places,
 
 The entry screen’s live preview calls that function with the tares loaded for the form. An active save calls the same function with the tares read from the database at save time, and stores that result plus those tare values. The client never sends net weight or tare. Zero is saved. A negative result is a validation error (`NET_WEIGHT_NEGATIVE`), not a 409.
 
+A package type may have no tare. Preview and save treat that missing tare as 0. The pallet column `package_tare_grams` stays `NOT NULL`, and the service writes 0. Pallet-type tare stays required. The package type’s own net weight is not part of this formula.
+
 The preview matches an active save. It does not clamp. Clamping exists only on the voided tare update below, which the entry screen does not perform.
 
 Bounds, also enforced with checks: reference number and pallet number are integers `>= 1`; package amount is an integer `>= 1`; gross weight and both tares are integers `>= 0`. A practical cap (gross at most 100,000 kg, tare at most 100 kg, package amount at most 10,000) keeps the tare multiplication inside a 32-bit integer.
 
 ### Tare edits and voided pallets
 
-Changing a package tare or a pallet tare runs one `UPDATE` for voided pallets of that type. It writes the new tare and sets net weight to `GREATEST(0, formula)`. Active pallets are not in that update. Nothing is loaded into JavaScript.
+Changing a package tare or a pallet tare runs one `UPDATE` for voided pallets of that type. It writes the new tare and sets net weight to `GREATEST(0, formula)`. Clearing a package tare writes 0. Active pallets are not in that update. Nothing is loaded into JavaScript.
 
 The pallet check constraint is the authority:
 
@@ -89,7 +91,7 @@ Voiding an active pallet still satisfies the check, because its formula was alre
 
 Tables: `growers`, `yield_types`, `package_types`, `pallet_types`.
 
-Each has a UUID primary key, `created_at` and `updated_at` as `timestamptz`, a Hebrew `name`, and `is_active` (default true). Package types add `tare_grams` and `counts_in_grower_inventory` (default true). Pallet types add `tare_grams`. Names are unique among active rows of that table.
+Each has a UUID primary key, `created_at` and `updated_at` as `timestamptz`, a Hebrew `name`, and `is_active` (default true). Package types add optional `tare_grams`, optional `net_weight_grams` (0 to 100 kg, not used by pallet net weight), optional `recommended_package_amount` (integer 1 to 10,000), and `counts_in_grower_inventory` (default true). Pallet types add required `tare_grams`. Names are unique among active rows of that table.
 
 No hard delete. Deactivating hides a row from new sets. Existing pallets keep the foreign key (`ON DELETE RESTRICT`). Renaming does not touch pallets. A tare edit does, and only as described above.
 
@@ -249,7 +251,7 @@ Home tiles in this feature:
 | סוגי אריזה | `Package` | `/app/package-types` |
 | סוגי משטח | `SquareStack` | `/app/pallet-types` |
 
-Each of those four screens can create, rename, and deactivate. Package types show the tare (kilograms in, grams stored) and the inventory checkbox. Pallet types show the tare. A back link returns to טבלאות, and from there to the launcher.
+Each of those four screens can create, rename, and deactivate. Package types show the optional tare, the optional net weight, the optional recommended package count, and the inventory checkbox. The condensed row shows only the values that are set. Pallet types show the required tare. A back link returns to טבלאות, and from there to the launcher.
 
 The other pallet-set screens, all titled under מיון ראשוני and reached from that list:
 
@@ -257,7 +259,7 @@ The other pallet-set screens, all titled under מיון ראשוני and reached
 - `/app/pallet-sets/voided` — voided sets only. A link from the active list, not a home tile.
 - `/app/pallet-sets/[id]` — detail, including an active set with no pallets and a voided set opened by id. Empty state in Hebrew, an add-pallet form, and a remove control on each pallet. Those call `addPallets` and `removePallets`. Void action with a confirmation. Add and remove are absent on a voided set. Static segments `new` and `voided` must stay ahead of `[id]`.
 - `/app/pallet-sets/new` — header fields. The operator can save with no pallet rows and land on the new set’s detail. The same page can include the grid below.
-- `/app/pallet-sets/[id]/edit` — header fields, then the pallet grid. A new row copies yield type, package type, pallet type, and package amount from the previous row. Pallet number and gross weight start empty, so a copied number does not collide. The operator can remove every row and save; the set stays active and empty. Keyboard: fields are real inputs, Enter moves along the row, and a control adds a row. Net weight updates as the row is edited. Submit uses `useActionState` and sends one `add` / `update` / `remove` call for the rows that changed, plus the header update when the header changed. Expected failures return a result and a Hebrew message (`aria-invalid`, `aria-describedby`). The form sends the revision it loaded.
+- `/app/pallet-sets/[id]/edit` — header fields, then the pallet grid. A new row copies yield type, package type, pallet type, and package amount from the previous row. Pallet number and gross weight start empty, so a copied number does not collide. Choosing a package type writes that type’s `recommended_package_amount` into the package-amount field when a recommendation exists. The operator can change it, and the server does not force the saved amount to match. Changing the type afterward replaces the amount only when the new type has a recommendation. No recommendation leaves the current amount. The operator can remove every row and save; the set stays active and empty. Keyboard: fields are real inputs, Enter moves along the row, and a control adds a row. Net weight updates as the row is edited. A package type with no tare previews as tare 0. Submit uses `useActionState` and sends one `add` / `update` / `remove` call for the rows that changed, plus the header update when the header changed. Expected failures return a result and a Hebrew message (`aria-invalid`, `aria-describedby`). The form sends the revision it loaded.
 
 The public page `/` stays as it is. Sign-in still lands on `/app`.
 

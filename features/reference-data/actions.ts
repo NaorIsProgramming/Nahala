@@ -55,10 +55,16 @@ export async function createReferenceAction(
   const raw: {
     name: string;
     tareKilograms?: string;
+    netWeightKilograms?: string;
+    recommendedPackageAmount?: string;
     countsInGrowerInventory?: boolean;
   } = { name: readText(formData, "name") };
   if (meta.hasTare) {
     raw.tareKilograms = readText(formData, "tareKilograms");
+  }
+  if (meta.hasPackageMeasures) {
+    raw.netWeightKilograms = readText(formData, "netWeightKilograms");
+    raw.recommendedPackageAmount = readText(formData, "recommendedPackageAmount");
   }
   if (meta.hasInventory) {
     raw.countsInGrowerInventory = formData.get("countsInGrowerInventory") === "true";
@@ -96,6 +102,8 @@ export async function updateReferenceAction(
     id: string;
     name: string;
     tareKilograms?: string;
+    netWeightKilograms?: string;
+    recommendedPackageAmount?: string;
     countsInGrowerInventory?: boolean;
   } = {
     id: readText(formData, "id"),
@@ -103,6 +111,10 @@ export async function updateReferenceAction(
   };
   if (meta.hasTare) {
     raw.tareKilograms = readText(formData, "tareKilograms");
+  }
+  if (meta.hasPackageMeasures) {
+    raw.netWeightKilograms = readText(formData, "netWeightKilograms");
+    raw.recommendedPackageAmount = readText(formData, "recommendedPackageAmount");
   }
   if (meta.hasInventory) {
     raw.countsInGrowerInventory = formData.get("countsInGrowerInventory") === "true";

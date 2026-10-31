@@ -134,6 +134,8 @@ describe("reference data access", () => {
         return;
       }
       expect(createdPackage.data.tareGrams).toBe(1005);
+      expect(createdPackage.data.netWeightGrams).toBeNull();
+      expect(createdPackage.data.recommendedPackageAmount).toBeNull();
       expect(createdPackage.data.countsInGrowerInventory).toBe(true);
 
       const updated = await updateReference(
@@ -152,6 +154,42 @@ describe("reference data access", () => {
       }
       expect(updated.data.tareGrams).toBe(500);
       expect(updated.data.countsInGrowerInventory).toBe(false);
+
+      const measured = await updateReference(
+        actor,
+        mustData(
+          readUpdateReference("package_types", {
+            id: createdPackage.data.id,
+            tareKilograms: "",
+            netWeightKilograms: "10",
+            recommendedPackageAmount: "48",
+          }),
+        ),
+      );
+      expect(measured.ok).toBe(true);
+      if (!measured.ok) {
+        return;
+      }
+      expect(measured.data.tareGrams).toBeNull();
+      expect(measured.data.netWeightGrams).toBe(10_000);
+      expect(measured.data.recommendedPackageAmount).toBe(48);
+
+      const cleared = await updateReference(
+        actor,
+        mustData(
+          readUpdateReference("package_types", {
+            id: createdPackage.data.id,
+            netWeightKilograms: "",
+            recommendedPackageAmount: "",
+          }),
+        ),
+      );
+      expect(cleared.ok).toBe(true);
+      if (!cleared.ok) {
+        return;
+      }
+      expect(cleared.data.netWeightGrams).toBeNull();
+      expect(cleared.data.recommendedPackageAmount).toBeNull();
     });
   });
 

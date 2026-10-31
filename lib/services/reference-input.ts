@@ -4,15 +4,23 @@ import { z } from "zod";
 
 import type { ReferenceTable } from "@/lib/access-types";
 import { parseKilogramsToGrams } from "@/lib/kilograms";
+import { parseRecommendedPackageAmount } from "@/lib/recommended-package-amount";
 import { REFERENCE_NAME_MAX_LENGTH } from "@/lib/reference-limits";
 
-export type ReferenceField = "name" | "tareKilograms" | "countsInGrowerInventory";
+export type ReferenceField =
+  | "name"
+  | "tareKilograms"
+  | "netWeightKilograms"
+  | "recommendedPackageAmount"
+  | "countsInGrowerInventory";
 
 export type ReferenceRecord = {
   id: string;
   name: string;
   isActive: boolean;
   tareGrams: number | null;
+  netWeightGrams: number | null;
+  recommendedPackageAmount: number | null;
   countsInGrowerInventory: boolean | null;
 };
 
@@ -31,7 +39,9 @@ export type CreateReferenceInput =
   | {
       table: "package_types";
       name: string;
-      tareGrams: number;
+      tareGrams: number | null;
+      netWeightGrams: number | null;
+      recommendedPackageAmount: number | null;
       countsInGrowerInventory: boolean;
     };
 
@@ -42,7 +52,9 @@ export type UpdateReferenceInput =
       table: "package_types";
       id: string;
       name?: string;
-      tareGrams?: number;
+      tareGrams?: number | null;
+      netWeightGrams?: number | null;
+      recommendedPackageAmount?: number | null;
       countsInGrowerInventory?: boolean;
     };
 
@@ -54,6 +66,10 @@ export type DeactivateReferenceInput = {
 const NAME_TAKEN_MESSAGE = "השם כבר בשימוש";
 const INVALID_TARE_MESSAGE =
   "הטרה צריכה להיות בין 0 ל-100 ק״ג, עם נקודה ועד שלוש ספרות אחריה";
+const INVALID_NET_WEIGHT_MESSAGE =
+  "המשקל הנטו צריך להיות בין 0 ל-100 ק״ג, עם נקודה ועד שלוש ספרות אחריה";
+const INVALID_RECOMMENDED_AMOUNT_MESSAGE =
+  "הכמות המומלצת צריכה להיות מספר שלם בין 1 ל-10,000";
 const INVALID_REQUEST_MESSAGE = "הבקשה אינה תקינה";
 const FORBIDDEN_MESSAGE = "אין הרשאה לבצע את הפעולה";
 const NOT_FOUND_MESSAGE = "הרשומה לא נמצאה";
@@ -81,7 +97,9 @@ const palletUpdateSchema = z
 
 const packageCreateSchema = z.strictObject({
   name: nameSchema,
-  tareKilograms: tareKilogramsSchema,
+  tareKilograms: z.string().default(""),
+  netWeightKilograms: z.string().default(""),
+  recommendedPackageAmount: z.string().default(""),
   countsInGrowerInventory: z.boolean().default(true),
 });
 
@@ -89,13 +107,17 @@ const packageUpdateSchema = z
   .strictObject({
     id: idSchema,
     name: nameSchema.optional(),
-    tareKilograms: tareKilogramsSchema.optional(),
+    tareKilograms: z.string().optional(),
+    netWeightKilograms: z.string().optional(),
+    recommendedPackageAmount: z.string().optional(),
     countsInGrowerInventory: z.boolean().optional(),
   })
   .refine(
     (value) =>
       value.name !== undefined ||
       value.tareKilograms !== undefined ||
+      value.netWeightKilograms !== undefined ||
+      value.recommendedPackageAmount !== undefined ||
       value.countsInGrowerInventory !== undefined,
   );
 
@@ -127,12 +149,24 @@ export function invalidRequest(field?: ReferenceField): ReferenceFailure {
   if (field === "tareKilograms") {
     return { ok: false, code: "INVALID", message: INVALID_TARE_MESSAGE, field };
   }
+  if (field === "netWeightKilograms") {
+    return { ok: false, code: "INVALID", message: INVALID_NET_WEIGHT_MESSAGE, field };
+  }
+  if (field === "recommendedPackageAmount") {
+    return { ok: false, code: "INVALID", message: INVALID_RECOMMENDED_AMOUNT_MESSAGE, field };
+  }
   return { ok: false, code: "INVALID", message: INVALID_REQUEST_MESSAGE, field };
 }
 
 function invalidFromZod(error: z.ZodError): ReferenceFailure {
   const key = error.issues[0]?.path[0];
-  if (key === "name" || key === "tareKilograms" || key === "countsInGrowerInventory") {
+  if (
+    key === "name" ||
+    key === "tareKilograms" ||
+    key === "netWeightKilograms" ||
+    key === "recommendedPackageAmount" ||
+    key === "countsInGrowerInventory"
+  ) {
     return invalidRequest(key);
   }
   return invalidRequest();
@@ -144,6 +178,31 @@ function readTare(tareKilograms: string): ReferenceResult<number> {
     return invalidRequest("tareKilograms");
   }
   return { ok: true, data: grams };
+}
+
+function readOptionalKilograms(
+  kilograms: string,
+  field: "tareKilograms" | "netWeightKilograms",
+): ReferenceResult<number | null> {
+  if (kilograms.trim().length === 0) {
+    return { ok: true, data: null };
+  }
+  const grams = parseKilogramsToGrams(kilograms);
+  if (grams === null) {
+    return invalidRequest(field);
+  }
+  return { ok: true, data: grams };
+}
+
+function readOptionalAmount(amount: string): ReferenceResult<number | null> {
+  if (amount.trim().length === 0) {
+    return { ok: true, data: null };
+  }
+  const parsed = parseRecommendedPackageAmount(amount);
+  if (parsed === null) {
+    return invalidRequest("recommendedPackageAmount");
+  }
+  return { ok: true, data: parsed };
 }
 
 export function readCreateReference(
@@ -174,9 +233,17 @@ export function readCreateReference(
   if (!parsed.success) {
     return invalidFromZod(parsed.error);
   }
-  const tare = readTare(parsed.data.tareKilograms);
+  const tare = readOptionalKilograms(parsed.data.tareKilograms, "tareKilograms");
   if (!tare.ok) {
     return tare;
+  }
+  const netWeight = readOptionalKilograms(parsed.data.netWeightKilograms, "netWeightKilograms");
+  if (!netWeight.ok) {
+    return netWeight;
+  }
+  const recommended = readOptionalAmount(parsed.data.recommendedPackageAmount);
+  if (!recommended.ok) {
+    return recommended;
   }
   return {
     ok: true,
@@ -184,6 +251,8 @@ export function readCreateReference(
       table,
       name: parsed.data.name,
       tareGrams: tare.data,
+      netWeightGrams: netWeight.data,
+      recommendedPackageAmount: recommended.data,
       countsInGrowerInventory: parsed.data.countsInGrowerInventory,
     },
   };
@@ -227,9 +296,25 @@ export function readUpdateReference(
     return invalidFromZod(parsed.error);
   }
   const tare =
-    parsed.data.tareKilograms === undefined ? undefined : readTare(parsed.data.tareKilograms);
+    parsed.data.tareKilograms === undefined
+      ? undefined
+      : readOptionalKilograms(parsed.data.tareKilograms, "tareKilograms");
   if (tare && !tare.ok) {
     return tare;
+  }
+  const netWeight =
+    parsed.data.netWeightKilograms === undefined
+      ? undefined
+      : readOptionalKilograms(parsed.data.netWeightKilograms, "netWeightKilograms");
+  if (netWeight && !netWeight.ok) {
+    return netWeight;
+  }
+  const recommended =
+    parsed.data.recommendedPackageAmount === undefined
+      ? undefined
+      : readOptionalAmount(parsed.data.recommendedPackageAmount);
+  if (recommended && !recommended.ok) {
+    return recommended;
   }
   return {
     ok: true,
@@ -238,6 +323,8 @@ export function readUpdateReference(
       id: parsed.data.id,
       ...(parsed.data.name === undefined ? {} : { name: parsed.data.name }),
       ...(tare === undefined ? {} : { tareGrams: tare.data }),
+      ...(netWeight === undefined ? {} : { netWeightGrams: netWeight.data }),
+      ...(recommended === undefined ? {} : { recommendedPackageAmount: recommended.data }),
       ...(parsed.data.countsInGrowerInventory === undefined
         ? {}
         : { countsInGrowerInventory: parsed.data.countsInGrowerInventory }),

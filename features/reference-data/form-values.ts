@@ -3,6 +3,8 @@ import type { ReferenceActionState } from "./action-state";
 export type ReferenceFormValues = {
   name: string;
   tareKilograms: string;
+  netWeightKilograms: string;
+  recommendedPackageAmount: string;
   countsInGrowerInventory: boolean;
 };
 
@@ -19,7 +21,13 @@ export function nextFieldValues(
     if (!clearOnSuccess) {
       return current;
     }
-    return { name: "", tareKilograms: "", countsInGrowerInventory: true };
+    return {
+      name: "",
+      tareKilograms: "",
+      netWeightKilograms: "",
+      recommendedPackageAmount: "",
+      countsInGrowerInventory: true,
+    };
   }
 
   if (state.status !== "error" || state.field === undefined) {
@@ -33,6 +41,16 @@ export function nextFieldValues(
     return current.tareKilograms === ""
       ? current
       : { ...current, tareKilograms: "" };
+  }
+  if (state.field === "netWeightKilograms") {
+    return current.netWeightKilograms === ""
+      ? current
+      : { ...current, netWeightKilograms: "" };
+  }
+  if (state.field === "recommendedPackageAmount") {
+    return current.recommendedPackageAmount === ""
+      ? current
+      : { ...current, recommendedPackageAmount: "" };
   }
   return current.countsInGrowerInventory
     ? { ...current, countsInGrowerInventory: false }

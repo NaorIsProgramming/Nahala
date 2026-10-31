@@ -12,11 +12,8 @@ import {
   deactivateReferenceAction,
   updateReferenceAction,
 } from "./actions";
-import {
-  CreateReferenceForm,
-  ReferenceRowForm,
-  type ReferenceRowValues,
-} from "./reference-forms";
+import type { ReferenceRowValues } from "./reference-forms";
+import { ReferenceMasterDetail } from "./reference-master-detail";
 import { referenceTableMeta } from "./table-meta";
 
 type ReferenceAdminPageProps = {
@@ -47,51 +44,20 @@ export async function ReferenceAdminPage({
   const deactivateAction = deactivateReferenceAction.bind(null, table);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 pb-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-16">
       <BackLink href="/app/tables" label="טבלאות" />
       <h1 className="text-3xl font-semibold tracking-tight">{meta.label}</h1>
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
-        <h2 className="text-xl font-semibold tracking-tight">רשומה חדשה</h2>
-        <CreateReferenceForm
-          key={rows.map((row) => row.id).join(",") || "empty"}
-          idPrefix={`${table}-create`}
-          action={createAction}
-          hasTare={meta.hasTare}
-          hasInventory={meta.hasInventory}
-        />
-      </section>
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">רשומות</h2>
-        {rows.length === 0 ? (
-          <p className="text-base leading-normal text-muted">אין רשומות עדיין.</p>
-        ) : (
-          <ul className="flex flex-col gap-4">
-            {rows.map((row) => (
-              <li
-                key={rowKey(row)}
-                className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-surface p-4"
-              >
-                <p
-                  className={
-                    row.isActive
-                      ? "text-base leading-normal text-foreground"
-                      : "text-base leading-normal text-muted"
-                  }
-                >
-                  {row.isActive ? "פעיל" : "לא פעיל"}
-                </p>
-                <ReferenceRowForm
-                  row={row}
-                  action={updateAction}
-                  deactivateAction={deactivateAction}
-                  hasTare={meta.hasTare}
-                  hasInventory={meta.hasInventory}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <ReferenceMasterDetail
+        idPrefix={table}
+        rows={rows}
+        hasTare={meta.hasTare}
+        tareRequired={meta.tareRequired}
+        hasInventory={meta.hasInventory}
+        hasPackageMeasures={meta.hasPackageMeasures}
+        createAction={createAction}
+        updateAction={updateAction}
+        deactivateAction={deactivateAction}
+      />
     </main>
   );
 }
@@ -113,6 +79,8 @@ function toRowValues(row: {
   name: string;
   isActive: boolean;
   tareGrams: number | null;
+  netWeightGrams: number | null;
+  recommendedPackageAmount: number | null;
   countsInGrowerInventory: boolean | null;
 }): ReferenceRowValues {
   return {
@@ -120,16 +88,11 @@ function toRowValues(row: {
     name: row.name,
     isActive: row.isActive,
     tareKilograms: row.tareGrams === null ? null : formatGramsAsKilograms(row.tareGrams),
+    netWeightKilograms:
+      row.netWeightGrams === null ? null : formatGramsAsKilograms(row.netWeightGrams),
+    recommendedPackageAmount:
+      row.recommendedPackageAmount === null ? null : String(row.recommendedPackageAmount),
     countsInGrowerInventory: row.countsInGrowerInventory,
   };
 }
 
-function rowKey(row: ReferenceRowValues): string {
-  return [
-    row.id,
-    row.name,
-    row.tareKilograms ?? "",
-    String(row.countsInGrowerInventory),
-    String(row.isActive),
-  ].join(":");
-}

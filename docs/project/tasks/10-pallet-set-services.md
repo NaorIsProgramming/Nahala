@@ -17,7 +17,7 @@ Set and reference services enforce the plan, including audit writes, grower and 
 
 - The plan’s service tests pass against local Postgres, including concurrency and the grower and kind cases. List, detail, reference-number lookup, add, remove, and the grower dropdown all use `scopeForSets` in the same query. Rows are not loaded and then filtered in JavaScript.
 - Create, header update, add, update, and remove are each one transaction. A thrown error after an insert leaves no partial pallet and no audit event. An empty create succeeds. A header update does not change the pallet count. Removing the last pallet leaves the set active and still holding its reference number.
-- A voided tare edit runs one `UPDATE`. Active pallets keep their stored tare and net. A voided pallet whose formula stays non-negative stores that result. One whose formula goes negative stores net 0 and the new tare. One audit event is written on the type, not one event per pallet.
+- A voided tare edit runs one `UPDATE`. Active pallets keep their stored tare and net. A voided pallet whose formula stays non-negative stores that result. One whose formula goes negative stores net 0 and the new tare. A package type with no tare stores package tare 0 on that update and on an active save. Pallet-type tare stays required. One audit event is written on the type, not one event per pallet.
 - `security-reviewer` has reviewed the services. `verifier` has run typecheck, lint, and tests. The report quotes that output.
 
 ## Scope

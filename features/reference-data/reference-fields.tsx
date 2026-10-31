@@ -28,9 +28,13 @@ export function ReferenceFields({
   idPrefix,
   state,
   hasTare,
+  tareRequired,
   hasInventory,
+  hasPackageMeasures,
   defaultName,
   defaultTare,
+  defaultNetWeight,
+  defaultRecommended,
   defaultInventory,
   clearOnSuccess,
   disabled,
@@ -38,9 +42,13 @@ export function ReferenceFields({
   idPrefix: string;
   state: ReferenceActionState;
   hasTare: boolean;
+  tareRequired: boolean;
   hasInventory: boolean;
+  hasPackageMeasures: boolean;
   defaultName?: string;
   defaultTare?: string | null;
+  defaultNetWeight?: string | null;
+  defaultRecommended?: string | null;
   defaultInventory?: boolean | null;
   clearOnSuccess: boolean;
   disabled: boolean;
@@ -49,10 +57,14 @@ export function ReferenceFields({
   const hasError = state.status === "error";
   const nameInvalid = hasError && state.field === "name";
   const tareInvalid = hasError && state.field === "tareKilograms";
+  const netInvalid = hasError && state.field === "netWeightKilograms";
+  const recommendedInvalid = hasError && state.field === "recommendedPackageAmount";
   const describedBy = hasError ? errorId : undefined;
   const [values, setValues] = useState<ReferenceFormValues>(() => ({
     name: defaultName ?? "",
     tareKilograms: defaultTare ?? "",
+    netWeightKilograms: defaultNetWeight ?? "",
+    recommendedPackageAmount: defaultRecommended ?? "",
     countsInGrowerInventory: defaultInventory !== false,
   }));
   const [seenState, setSeenState] = useState(state);
@@ -93,7 +105,7 @@ export function ReferenceFields({
           <input
             id={`${idPrefix}-tare`}
             name="tareKilograms"
-            required
+            required={tareRequired}
             inputMode="decimal"
             autoComplete="off"
             dir="ltr"
@@ -110,6 +122,62 @@ export function ReferenceFields({
             className={`${fieldClassName} tabular-nums`}
           />
         </div>
+      ) : null}
+      {hasPackageMeasures ? (
+        <>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor={`${idPrefix}-net`}
+              className="text-base font-medium text-foreground"
+            >
+              משקל נטו (ק״ג)
+            </label>
+            <input
+              id={`${idPrefix}-net`}
+              name="netWeightKilograms"
+              inputMode="decimal"
+              autoComplete="off"
+              dir="ltr"
+              value={shown.netWeightKilograms}
+              onChange={(event) => {
+                setValues((current) => ({
+                  ...current,
+                  netWeightKilograms: event.target.value,
+                }));
+              }}
+              disabled={disabled}
+              aria-invalid={netInvalid}
+              aria-describedby={netInvalid ? describedBy : undefined}
+              className={`${fieldClassName} tabular-nums`}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor={`${idPrefix}-recommended`}
+              className="text-base font-medium text-foreground"
+            >
+              כמות מומלצת במשטח מלא
+            </label>
+            <input
+              id={`${idPrefix}-recommended`}
+              name="recommendedPackageAmount"
+              inputMode="numeric"
+              autoComplete="off"
+              dir="ltr"
+              value={shown.recommendedPackageAmount}
+              onChange={(event) => {
+                setValues((current) => ({
+                  ...current,
+                  recommendedPackageAmount: event.target.value,
+                }));
+              }}
+              disabled={disabled}
+              aria-invalid={recommendedInvalid}
+              aria-describedby={recommendedInvalid ? describedBy : undefined}
+              className={`${fieldClassName} tabular-nums`}
+            />
+          </div>
+        </>
       ) : null}
       {hasInventory ? (
         <label className="flex min-h-11 items-center gap-3 text-base text-foreground">

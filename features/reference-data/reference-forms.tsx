@@ -21,7 +21,9 @@ type ReferenceAction = (
 
 type ReferenceFormFields = {
   hasTare: boolean;
+  tareRequired: boolean;
   hasInventory: boolean;
+  hasPackageMeasures: boolean;
 };
 
 export type ReferenceRowValues = {
@@ -29,6 +31,8 @@ export type ReferenceRowValues = {
   name: string;
   isActive: boolean;
   tareKilograms: string | null;
+  netWeightKilograms: string | null;
+  recommendedPackageAmount: string | null;
   countsInGrowerInventory: boolean | null;
 };
 
@@ -47,7 +51,9 @@ export function CreateReferenceForm({
   idPrefix,
   action,
   hasTare,
+  tareRequired,
   hasInventory,
+  hasPackageMeasures,
 }: ReferenceFormFields & {
   idPrefix: string;
   action: ReferenceAction;
@@ -65,7 +71,9 @@ export function CreateReferenceForm({
         idPrefix={idPrefix}
         state={state}
         hasTare={hasTare}
+        tareRequired={tareRequired}
         hasInventory={hasInventory}
+        hasPackageMeasures={hasPackageMeasures}
         clearOnSuccess
         disabled={pending}
       />
@@ -81,7 +89,9 @@ export function ReferenceRowForm({
   action,
   deactivateAction,
   hasTare,
+  tareRequired,
   hasInventory,
+  hasPackageMeasures,
 }: ReferenceFormFields & {
   row: ReferenceRowValues;
   action: ReferenceAction;
@@ -107,9 +117,13 @@ export function ReferenceRowForm({
           idPrefix={row.id}
           state={state}
           hasTare={hasTare}
+          tareRequired={tareRequired}
           hasInventory={hasInventory}
+          hasPackageMeasures={hasPackageMeasures}
           defaultName={row.name}
           defaultTare={row.tareKilograms}
+          defaultNetWeight={row.netWeightKilograms}
+          defaultRecommended={row.recommendedPackageAmount}
           defaultInventory={row.countsInGrowerInventory}
           clearOnSuccess={false}
           disabled={busy}
