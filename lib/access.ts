@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { eq, sql, type SQL } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/db";
@@ -11,6 +11,7 @@ import {
   type Actor,
   type Grant,
   type GrantAccess,
+  type PalletKind,
   type ReferenceTable,
 } from "@/lib/access-types";
 import { getSession } from "@/lib/session";
@@ -116,5 +117,54 @@ export function canWriteReference(actor: Actor, table: ReferenceTable): boolean 
       return grant.access === "write";
     }
     return grant.scope === "reference" && grant.table === table;
+  });
+}
+
+/**
+ * Rows the actor may see. Global grants match every set. Pallet-set grants
+ * are a union: a null grower or kind means all of that field. Reference
+ * grants match nothing here. No matching grant is `false` (default deny).
+ */
+export function scopeForSets(
+  actor: Actor,
+  columns: { growerId: SQL; kind: SQL },
+): SQL {
+  if (actor.grants.some((grant) => grant.scope === "global")) {
+    return sql`true`;
+  }
+
+  const parts: SQL[] = [];
+  for (const grant of actor.grants) {
+    if (grant.scope !== "palletSets") {
+      continue;
+    }
+    const growerMatch =
+      grant.growerId === null
+        ? sql`true`
+        : sql`${columns.growerId} = ${grant.growerId}`;
+    const kindMatch =
+      grant.kind === null ? sql`true` : sql`${columns.kind} = ${grant.kind}`;
+    parts.push(sql`(${growerMatch} and ${kindMatch})`);
+  }
+
+  if (parts.length === 0) {
+    return sql`false`;
+  }
+
+  return sql`(${sql.join(parts, sql` or `)})`;
+}
+
+/** Write wins over read. A global write grant covers every grower and kind. */
+export function canWriteSet(actor: Actor, growerId: string, kind: PalletKind): boolean {
+  return actor.grants.some((grant) => {
+    if (grant.scope === "global") {
+      return grant.access === "write";
+    }
+    if (grant.scope !== "palletSets" || grant.access !== "write") {
+      return false;
+    }
+    const growerMatches = grant.growerId === null || grant.growerId === growerId;
+    const kindMatches = grant.kind === null || grant.kind === kind;
+    return growerMatches && kindMatches;
   });
 }

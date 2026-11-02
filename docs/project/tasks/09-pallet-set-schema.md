@@ -1,6 +1,6 @@
 # 09 — Pallet-set schema and migration
 
-Status: not started. Pallet-intake task 2. Depends on 08. Do not start 10.
+Status: done. Pallet-intake task 2. Depends on 08. Do not start 10 until its own chat.
 
 ## Goal
 

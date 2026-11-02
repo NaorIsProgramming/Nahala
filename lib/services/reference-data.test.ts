@@ -12,7 +12,7 @@ if (!isLocalDatabaseUrl(process.env.DATABASE_URL ?? "")) {
 }
 
 const { db } = await import("@/db");
-const { accessGrants, growers, packageTypes, palletTypes, user, yieldTypes } =
+const { accessGrants, auditEvents, auditSubjects, growers, packageTypes, palletTypes, user, yieldTypes } =
   await import("@/db/schema");
 const { loadGrants } = await import("@/lib/access");
 const { ensureGlobalWriteGrant } = await import("@/lib/seed-grant");
@@ -56,6 +56,15 @@ async function withUser(run: (userId: string, created: Created[]) => Promise<voi
   try {
     await run(userId, created);
   } finally {
+    const events = await db
+      .select({ id: auditEvents.id })
+      .from(auditEvents)
+      .where(eq(auditEvents.actorUserId, userId));
+    const eventIds = events.map((event) => event.id);
+    if (eventIds.length > 0) {
+      await db.delete(auditSubjects).where(inArray(auditSubjects.eventId, eventIds));
+      await db.delete(auditEvents).where(inArray(auditEvents.id, eventIds));
+    }
     await db.delete(accessGrants).where(eq(accessGrants.userId, userId));
     for (const table of Object.keys(tables) as ReferenceTable[]) {
       const ids = created.filter((row) => row.table === table).map((row) => row.id);

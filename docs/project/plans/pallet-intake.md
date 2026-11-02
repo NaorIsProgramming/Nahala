@@ -1,6 +1,6 @@
 # Pallet intake
 
-Status: approved 2026-10-31. Task 1 is built. Build the remaining briefs one chat at a time, in order, starting at `docs/project/tasks/09-pallet-set-schema.md`.
+Status: approved 2026-10-31. Tasks 1–3 are built. Build the remaining briefs one chat at a time, in order, starting at `docs/project/tasks/11-pallet-set-list.md`.
 
 ## Goal
 
@@ -356,8 +356,8 @@ Task 3 writes the audit rows because they have to commit in the same transaction
 | Task | Brief | Status |
 | --- | --- | --- |
 | 1. Reference data and admin | `docs/project/tasks/08-reference-data.md` | done |
-| 2. Pallet-set schema and migration | `docs/project/tasks/09-pallet-set-schema.md` | not started |
-| 3. Services, access checks, and tests | `docs/project/tasks/10-pallet-set-services.md` | not started |
+| 2. Pallet-set schema and migration | `docs/project/tasks/09-pallet-set-schema.md` | done |
+| 3. Services, access checks, and tests | `docs/project/tasks/10-pallet-set-services.md` | done |
 | 4. List, detail, void, voided view | `docs/project/tasks/11-pallet-set-list.md` | not started |
 | 5. Entry and edit screen | `docs/project/tasks/12-pallet-set-entry.md` | not started |
 | 6. History screen | `docs/project/tasks/13-pallet-set-history.md` | not started |

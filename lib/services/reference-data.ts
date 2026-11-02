@@ -12,6 +12,7 @@ import {
   logPostgresFailure,
 } from "@/lib/postgres-error";
 
+import { writeAudit } from "./pallet-set-audit";
 import {
   forbidden,
   invalidRequest,
@@ -23,6 +24,7 @@ import {
   type ReferenceResult,
   type UpdateReferenceInput,
 } from "./reference-input";
+import { applyVoidedPackageTare, applyVoidedPalletTare } from "./voided-tare";
 
 export async function listActiveReference(
   actor: Actor,
@@ -61,7 +63,7 @@ export async function updateReference(
   if (!canWriteReference(actor, input.table)) {
     return forbidden();
   }
-  return captureWrite(() => updateReferenceRow(input));
+  return captureWrite(() => updateReferenceRow(actor, input));
 }
 
 export async function deactivateReference(
@@ -285,6 +287,7 @@ function insertedPackage(
 }
 
 async function updateReferenceRow(
+  actor: Actor,
   input: UpdateReferenceInput,
 ): Promise<ReferenceResult<ReferenceRecord>> {
   const updatedAt = new Date();
@@ -314,67 +317,127 @@ async function updateReferenceRow(
         });
       return updatedNamed(rows);
     }
-    case "pallet_types": {
-      const rows = await db
-        .update(palletTypes)
-        .set({
-          updatedAt,
-          ...(input.name === undefined ? {} : { name: input.name }),
-          ...(input.tareGrams === undefined ? {} : { tareGrams: input.tareGrams }),
-        })
-        .where(eq(palletTypes.id, input.id))
-        .returning({
-          id: palletTypes.id,
-          name: palletTypes.name,
-          isActive: palletTypes.isActive,
-          tareGrams: palletTypes.tareGrams,
-        });
-      const row = rows[0];
-      if (!row) {
-        return notFound();
-      }
-      return {
-        ok: true,
-        data: {
-          ...row,
-          netWeightGrams: null,
-          recommendedPackageAmount: null,
-          countsInGrowerInventory: null,
-        },
-      };
-    }
-    case "package_types": {
-      const rows = await db
-        .update(packageTypes)
-        .set({
-          updatedAt,
-          ...(input.name === undefined ? {} : { name: input.name }),
-          ...(input.tareGrams === undefined ? {} : { tareGrams: input.tareGrams }),
-          ...(input.netWeightGrams === undefined ? {} : { netWeightGrams: input.netWeightGrams }),
-          ...(input.recommendedPackageAmount === undefined
-            ? {}
-            : { recommendedPackageAmount: input.recommendedPackageAmount }),
-          ...(input.countsInGrowerInventory === undefined
-            ? {}
-            : { countsInGrowerInventory: input.countsInGrowerInventory }),
-        })
-        .where(eq(packageTypes.id, input.id))
-        .returning({
-          id: packageTypes.id,
-          name: packageTypes.name,
-          isActive: packageTypes.isActive,
-          tareGrams: packageTypes.tareGrams,
-          netWeightGrams: packageTypes.netWeightGrams,
-          recommendedPackageAmount: packageTypes.recommendedPackageAmount,
-          countsInGrowerInventory: packageTypes.countsInGrowerInventory,
-        });
-      const row = rows[0];
-      if (!row) {
-        return notFound();
-      }
-      return { ok: true, data: row };
-    }
+    case "pallet_types":
+      return updatePalletType(actor, input);
+    case "package_types":
+      return updatePackageType(actor, input);
   }
+}
+
+async function updatePalletType(
+  actor: Actor,
+  input: Extract<UpdateReferenceInput, { table: "pallet_types" }>,
+): Promise<ReferenceResult<ReferenceRecord>> {
+  return db.transaction(async (tx) => {
+    const existing = await tx
+      .select({ tareGrams: palletTypes.tareGrams })
+      .from(palletTypes)
+      .where(eq(palletTypes.id, input.id))
+      .limit(1);
+    const current = existing[0];
+    if (!current) {
+      return notFound();
+    }
+
+    const rows = await tx
+      .update(palletTypes)
+      .set({
+        updatedAt: new Date(),
+        ...(input.name === undefined ? {} : { name: input.name }),
+        ...(input.tareGrams === undefined ? {} : { tareGrams: input.tareGrams }),
+      })
+      .where(eq(palletTypes.id, input.id))
+      .returning({
+        id: palletTypes.id,
+        name: palletTypes.name,
+        isActive: palletTypes.isActive,
+        tareGrams: palletTypes.tareGrams,
+      });
+    const row = rows[0];
+    if (!row) {
+      return notFound();
+    }
+
+    if (input.tareGrams !== undefined && input.tareGrams !== current.tareGrams) {
+      await applyVoidedPalletTare(tx, input.id, input.tareGrams);
+      await writeAudit(tx, {
+        actorUserId: actor.userId,
+        action: "tare_changed",
+        summary: { tareGrams: { from: current.tareGrams, to: input.tareGrams } },
+        subjects: [{ subjectType: "pallet_type", subjectId: input.id }],
+      });
+    }
+
+    return {
+      ok: true,
+      data: {
+        ...row,
+        netWeightGrams: null,
+        recommendedPackageAmount: null,
+        countsInGrowerInventory: null,
+      },
+    };
+  });
+}
+
+async function updatePackageType(
+  actor: Actor,
+  input: Extract<UpdateReferenceInput, { table: "package_types" }>,
+): Promise<ReferenceResult<ReferenceRecord>> {
+  return db.transaction(async (tx) => {
+    const existing = await tx
+      .select({ tareGrams: packageTypes.tareGrams })
+      .from(packageTypes)
+      .where(eq(packageTypes.id, input.id))
+      .limit(1);
+    const current = existing[0];
+    if (!current) {
+      return notFound();
+    }
+
+    const rows = await tx
+      .update(packageTypes)
+      .set({
+        updatedAt: new Date(),
+        ...(input.name === undefined ? {} : { name: input.name }),
+        ...(input.tareGrams === undefined ? {} : { tareGrams: input.tareGrams }),
+        ...(input.netWeightGrams === undefined
+          ? {}
+          : { netWeightGrams: input.netWeightGrams }),
+        ...(input.recommendedPackageAmount === undefined
+          ? {}
+          : { recommendedPackageAmount: input.recommendedPackageAmount }),
+        ...(input.countsInGrowerInventory === undefined
+          ? {}
+          : { countsInGrowerInventory: input.countsInGrowerInventory }),
+      })
+      .where(eq(packageTypes.id, input.id))
+      .returning({
+        id: packageTypes.id,
+        name: packageTypes.name,
+        isActive: packageTypes.isActive,
+        tareGrams: packageTypes.tareGrams,
+        netWeightGrams: packageTypes.netWeightGrams,
+        recommendedPackageAmount: packageTypes.recommendedPackageAmount,
+        countsInGrowerInventory: packageTypes.countsInGrowerInventory,
+      });
+    const row = rows[0];
+    if (!row) {
+      return notFound();
+    }
+
+    if (input.tareGrams !== undefined && input.tareGrams !== current.tareGrams) {
+      await applyVoidedPackageTare(tx, input.id, input.tareGrams);
+      await writeAudit(tx, {
+        actorUserId: actor.userId,
+        action: "tare_changed",
+        summary: { tareGrams: { from: current.tareGrams, to: input.tareGrams } },
+        subjects: [{ subjectType: "package_type", subjectId: input.id }],
+      });
+    }
+
+    return { ok: true, data: row };
+  });
 }
 
 function updatedNamed(

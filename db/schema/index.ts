@@ -4,3 +4,5 @@
 export * from "./auth";
 export * from "./reference-data";
 export * from "./access-grants";
+export * from "./pallet-sets";
+export * from "./audit";

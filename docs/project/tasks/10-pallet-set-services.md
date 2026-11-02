@@ -1,6 +1,6 @@
 # 10 — Services, access checks, and tests
 
-Status: not started. Pallet-intake task 3. Depends on 09. Do not start 11.
+Status: done. Pallet-intake task 3. Depends on 09. Do not start 11 in this brief.
 
 ## Goal
 
