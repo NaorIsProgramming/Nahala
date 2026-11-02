@@ -5,6 +5,7 @@ import { PALLET_KINDS } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 
 import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "./classes";
+import { FilterNameSearch } from "./name-search";
 import { hasListFilters, palletSetListPath, type ListSearchParams } from "./list-query";
 
 type GrowerChoice = { id: string; name: string };
@@ -13,10 +14,12 @@ export function SetFilters({
   base,
   params,
   growers,
+  commonGrowerIds,
 }: {
   base: "/app/pallet-sets" | "/app/pallet-sets/voided";
   params: ListSearchParams;
   growers: GrowerChoice[];
+  commonGrowerIds: string[];
 }): ReactNode {
   return (
     <form method="get" className="grid gap-4 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -38,24 +41,15 @@ export function SetFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="filter-grower" className="text-base font-medium text-foreground">
-          מגדל
-        </label>
-        <select
-          id="filter-grower"
-          name="grower"
-          defaultValue={params.grower ?? ""}
-          className={fieldClassName}
-        >
-          <option value="">כל המגדלים</option>
-          {growers.map((grower) => (
-            <option key={grower.id} value={grower.id}>
-              {grower.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <FilterNameSearch
+        key={params.grower ?? "all"}
+        id="filter-grower"
+        name="grower"
+        label="מגדל"
+        options={growers}
+        commonIds={commonGrowerIds}
+        defaultId={params.grower ?? ""}
+      />
       <div className="flex flex-col gap-2">
         <label htmlFor="filter-reference" className="text-base font-medium text-foreground">
           אסמכתא

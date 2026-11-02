@@ -156,6 +156,57 @@ export async function listSetGrowers(
   return { ok: true, data: rows };
 }
 
+export type CommonNameIds = {
+  growers: string[];
+  yieldTypes: string[];
+  packageTypes: string[];
+  palletTypes: string[];
+};
+
+/** The five names used most often on sets this actor can see. */
+export async function listCommonNameIds(actor: Actor): Promise<CommonNameIds> {
+  const scope = setScope(actor);
+  const [growerRows, yieldRows, packageRows, palletTypeRows] = await Promise.all([
+    db
+      .select({ id: palletSets.growerId })
+      .from(palletSets)
+      .where(scope)
+      .groupBy(palletSets.growerId)
+      .orderBy(desc(sql`count(*)`), asc(palletSets.growerId))
+      .limit(5),
+    db
+      .select({ id: pallets.yieldTypeId })
+      .from(pallets)
+      .innerJoin(palletSets, eq(pallets.setId, palletSets.id))
+      .where(scope)
+      .groupBy(pallets.yieldTypeId)
+      .orderBy(desc(sql`count(*)`), asc(pallets.yieldTypeId))
+      .limit(5),
+    db
+      .select({ id: pallets.packageTypeId })
+      .from(pallets)
+      .innerJoin(palletSets, eq(pallets.setId, palletSets.id))
+      .where(scope)
+      .groupBy(pallets.packageTypeId)
+      .orderBy(desc(sql`count(*)`), asc(pallets.packageTypeId))
+      .limit(5),
+    db
+      .select({ id: pallets.palletTypeId })
+      .from(pallets)
+      .innerJoin(palletSets, eq(pallets.setId, palletSets.id))
+      .where(scope)
+      .groupBy(pallets.palletTypeId)
+      .orderBy(desc(sql`count(*)`), asc(pallets.palletTypeId))
+      .limit(5),
+  ]);
+  return {
+    growers: growerRows.map((row) => row.id),
+    yieldTypes: yieldRows.map((row) => row.id),
+    packageTypes: packageRows.map((row) => row.id),
+    palletTypes: palletTypeRows.map((row) => row.id),
+  };
+}
+
 export async function createPalletSet(
   actor: Actor,
   input: CreatePalletSetInput,

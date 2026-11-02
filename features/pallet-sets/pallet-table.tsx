@@ -4,6 +4,7 @@ import { formatGramsAsKilograms } from "@/lib/kilograms";
 import type { PalletDetail } from "@/lib/services/pallet-set-input";
 
 import { RemovePalletButton } from "./remove-pallet-button";
+import { totalTareGrams } from "./tare";
 
 const headerClassName =
   "sticky top-0 border-b border-border bg-surface px-3 py-2 text-start font-medium text-foreground";
@@ -26,7 +27,7 @@ export function PalletTable({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-      <table className="w-full min-w-[56rem] border-collapse text-base">
+      <table className="w-full min-w-[48rem] border-collapse text-base">
         <thead>
           <tr>
             <th scope="col" className={headerClassName}>
@@ -48,10 +49,7 @@ export function PalletTable({
               ברוטו (ק״ג)
             </th>
             <th scope="col" className={headerClassName}>
-              טרת אריזה (ק״ג)
-            </th>
-            <th scope="col" className={headerClassName}>
-              טרת משטח (ק״ג)
+              טרה (ק״ג)
             </th>
             <th scope="col" className={headerClassName}>
               נטו (ק״ג)
@@ -65,7 +63,7 @@ export function PalletTable({
         </thead>
         <tbody>
           {pallets.map((pallet) => (
-            <tr key={pallet.id}>
+            <tr id={`pallet-${pallet.id}`} key={pallet.id} className="scroll-mt-24">
               <td className={cellClassName}>
                 <NumberText value={pallet.palletNumber} />
               </td>
@@ -79,10 +77,15 @@ export function PalletTable({
                 <NumberText value={formatGramsAsKilograms(pallet.grossWeightGrams)} />
               </td>
               <td className={cellClassName}>
-                <NumberText value={formatGramsAsKilograms(pallet.packageTareGrams)} />
-              </td>
-              <td className={cellClassName}>
-                <NumberText value={formatGramsAsKilograms(pallet.palletTareGrams)} />
+                <NumberText
+                  value={formatGramsAsKilograms(
+                    totalTareGrams(
+                      pallet.packageTareGrams,
+                      pallet.packageAmount,
+                      pallet.palletTareGrams,
+                    ),
+                  )}
+                />
               </td>
               <td className={cellClassName}>
                 <NumberText value={formatGramsAsKilograms(pallet.netWeightGrams)} />

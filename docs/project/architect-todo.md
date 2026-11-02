@@ -65,3 +65,7 @@ Do not build reports, grower balances, or any other use of the package net weigh
 On a package-tare change, you may later want an option to pick the date from which pallet net weight is recalculated with the new tare. Which date that is (`received_on` or something else), whether the day is included, and what happens to pallets before that date are not decided.
 
 Pallet intake does not do this. A tare change still rewrites voided pallets of that type immediately, and an active pallet keeps the tare and net from its last save until that set is saved again. Do not add a date control on the tare edit, and do not filter that update by date.
+
+## 13. Kind change and future inventory
+
+The detail page can change a set between א, ב, and ג. א and ב move packages from the grower to the packing house (`in`). ג does not (`none`). A later inventory between growers and the packing house must not treat a kind change as a silent balance change. Check that path when the inventory is specified. Do not build the inventory in this control.

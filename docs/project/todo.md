@@ -14,3 +14,4 @@ Short list for agents. The owner's longer notes are in `docs/project/architect-t
 10. Decide later whether grants can limit package types, possibly via groups. Do not filter by package, and do not add groups.
 11. Package net weight is stored and shown on the package type. Do not use it in pallet net weight, reports, or balances until that feature is specified.
 12. A package-tare change may later offer a date from which pallet net weight is recalculated. Do not add that date option. Pallet intake still updates voided pallets immediately and leaves active pallets until the next save.
+13. Changing a set's kind moves its packages between flow `in` (A, B) and `none` (C). When inventory between growers and the packing house is built, do not let that change silently alter a balance. The kind control exists; the inventory does not.

@@ -9,12 +9,14 @@ import { canWriteSet, getActor } from "@/lib/access";
 import type { Actor } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 import { listActiveReference } from "@/lib/services/reference-data";
-import { getPalletSet } from "@/lib/services/pallet-sets";
+import { getPalletSet, listCommonNameIds } from "@/lib/services/pallet-sets";
 
 import { AddPalletForm } from "./add-pallet-form";
 import { formatFullDate } from "./dates";
+import { KindForm } from "./kind-form";
 import { PalletTable } from "./pallet-table";
 import { PalletSetMessage } from "./screen-message";
+import { ScrollToPallet } from "./scroll-to-pallet";
 import { VoidSetForm } from "./void-set-form";
 
 export async function PalletSetDetailPage({ id }: { id: string }): Promise<ReactNode> {
@@ -53,6 +55,7 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-16">
+      <ScrollToPallet />
       <BackLink href={backHref} label={backLabel} />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-semibold tracking-tight">
@@ -69,7 +72,11 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
         ) : null}
       </div>
       <dl className="grid gap-4 sm:grid-cols-3">
-        <DetailItem label="סוג" value={PALLET_KIND_LABELS[set.kind]} />
+        {canChange ? (
+          <KindForm id={set.id} revision={set.revision} kind={set.kind} />
+        ) : (
+          <DetailItem label="סוג" value={PALLET_KIND_LABELS[set.kind]} />
+        )}
         <DetailItem label="מגדל" value={set.growerName} />
         <div className="flex flex-col gap-1">
           <dt className="text-base font-medium text-foreground">תאריך</dt>
@@ -94,6 +101,9 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
           yieldTypes={formOptions.yieldTypes}
           packageTypes={formOptions.packageTypes}
           palletTypes={formOptions.palletTypes}
+          commonYieldIds={formOptions.commonYieldIds}
+          commonPackageIds={formOptions.commonPackageIds}
+          commonPalletTypeIds={formOptions.commonPalletTypeIds}
         />
       ) : null}
       {canChange && formOptions?.status === "empty" ? (
@@ -131,15 +141,19 @@ type FormOptions =
       yieldTypes: { id: string; name: string }[];
       packageTypes: { id: string; name: string; recommendedPackageAmount: number | null }[];
       palletTypes: { id: string; name: string }[];
+      commonYieldIds: string[];
+      commonPackageIds: string[];
+      commonPalletTypeIds: string[];
     }
   | { status: "empty" }
   | { status: "unavailable" };
 
 async function loadFormOptions(actor: Actor): Promise<FormOptions> {
-  const [yields, packages, palletTypes] = await Promise.all([
+  const [yields, packages, palletTypes, commonNames] = await Promise.all([
     listActiveReference(actor, "yield_types"),
     listActiveReference(actor, "package_types"),
     listActiveReference(actor, "pallet_types"),
+    listCommonNameIds(actor),
   ]);
   if (!yields.ok || !packages.ok || !palletTypes.ok) {
     return { status: "unavailable" };
@@ -156,5 +170,8 @@ async function loadFormOptions(actor: Actor): Promise<FormOptions> {
       recommendedPackageAmount: row.recommendedPackageAmount,
     })),
     palletTypes: palletTypes.data.map((row) => ({ id: row.id, name: row.name })),
+    commonYieldIds: commonNames.yieldTypes,
+    commonPackageIds: commonNames.packageTypes,
+    commonPalletTypeIds: commonNames.palletTypes,
   };
 }

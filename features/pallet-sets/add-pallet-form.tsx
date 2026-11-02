@@ -6,6 +6,7 @@ import { addPalletAction } from "./actions";
 import { idlePalletSetActionState, type PalletSetActionState } from "./action-state";
 import { fieldClassName, primaryButtonClassName } from "./classes";
 import { FormError } from "./form-error";
+import { NameSearch } from "./name-search";
 import { submitWithoutReset } from "./submit-form";
 
 type NamedChoice = { id: string; name: string };
@@ -36,12 +37,18 @@ export function AddPalletForm({
   yieldTypes,
   packageTypes,
   palletTypes,
+  commonYieldIds,
+  commonPackageIds,
+  commonPalletTypeIds,
 }: {
   setId: string;
   revision: number;
   yieldTypes: NamedChoice[];
   packageTypes: PackageChoice[];
   palletTypes: NamedChoice[];
+  commonYieldIds: string[];
+  commonPackageIds: string[];
+  commonPalletTypeIds: string[];
 }): ReactNode {
   const [state, formAction, pending] = useActionState(addPalletAction, idlePalletSetActionState);
   const [fields, setFields] = useState<AddFields>(emptyFields);
@@ -83,7 +90,7 @@ export function AddPalletForm({
           setFields((current) => ({ ...current, palletNumber: value }));
         }}
       />
-      <ChoiceField
+      <NameSearch
         id="add-yield"
         name="yieldTypeId"
         label="סוג יבול"
@@ -91,12 +98,14 @@ export function AddPalletForm({
         invalid={invalidField === "yieldTypeId"}
         errorId={errorId}
         disabled={pending}
+        required
         options={yieldTypes}
+        commonIds={commonYieldIds}
         onChange={(value) => {
           setFields((current) => ({ ...current, yieldTypeId: value }));
         }}
       />
-      <ChoiceField
+      <NameSearch
         id="add-package"
         name="packageTypeId"
         label="סוג אריזה"
@@ -104,7 +113,9 @@ export function AddPalletForm({
         invalid={invalidField === "packageTypeId"}
         errorId={errorId}
         disabled={pending}
+        required
         options={packageTypes}
+        commonIds={commonPackageIds}
         onChange={(value) => {
           const selected = packageTypes.find((option) => option.id === value);
           setFields((current) => ({
@@ -117,7 +128,7 @@ export function AddPalletForm({
           }));
         }}
       />
-      <ChoiceField
+      <NameSearch
         id="add-pallet-type"
         name="palletTypeId"
         label="סוג משטח"
@@ -125,7 +136,9 @@ export function AddPalletForm({
         invalid={invalidField === "palletTypeId"}
         errorId={errorId}
         disabled={pending}
+        required
         options={palletTypes}
+        commonIds={commonPalletTypeIds}
         onChange={(value) => {
           setFields((current) => ({ ...current, palletTypeId: value }));
         }}
@@ -221,52 +234,3 @@ function Field({
   );
 }
 
-function ChoiceField({
-  id,
-  name,
-  label,
-  value,
-  invalid,
-  errorId,
-  disabled,
-  options,
-  onChange,
-}: {
-  id: string;
-  name: string;
-  label: string;
-  value: string;
-  invalid: boolean;
-  errorId: string;
-  disabled: boolean;
-  options: NamedChoice[];
-  onChange: (value: string) => void;
-}): ReactNode {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-base font-medium text-foreground">
-        {label}
-      </label>
-      <select
-        id={id}
-        name={name}
-        required
-        value={value}
-        disabled={disabled}
-        aria-invalid={invalid}
-        aria-describedby={invalid ? errorId : undefined}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        className={fieldClassName}
-      >
-        <option value="">בחירה</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}

@@ -32,7 +32,7 @@ Users and roles: pallet intake uses `access_grants` (global read or write, growe
 - Pallet intake task 1 is built: growers, yield types, package types, and pallet types, plus `access_grants`. Migrations `0001_nosy_the_call.sql` and `0002_flat_bloodstorm.sql` are applied locally. Package tare, net weight, and the recommended package count are optional.
 - Pallet intake task 2 is built: `pallet_sets`, `pallets`, `audit_events`, and `audit_subjects`. Migration `0003_pallet_sets.sql` is applied locally.
 - Pallet intake task 3 is built: set services, `scopeForSets`, audit writes, and the voided tare update.
-- Pallet intake task 4 is built: מיון ראשוני list, detail, one-pallet add and remove, void, the voided list, and a header-only new set. The grid is brief 12. `/api/v1` still waits on an API-key decision.
+- Pallet intake task 4 is built: מיון ראשוני list with a bottom pallet glimpse, detail, one-pallet add and remove, void, the voided list, a header-only new set, and a kind change. Name fields are a five-result search. The app header has home and the screens the user can open. The grid is brief 12. `/api/v1` still waits on an API-key decision.
 
 ## Architecture map
 
@@ -59,7 +59,7 @@ What exists now:
 - `lib/kilograms.ts` : kilogram text to integer grams, no `server-only` import
 - `components/ui/launcher-tile.tsx` : the shared launcher tile
 - `app/app/page.tsx` : launcher. Tiles are טבלאות and, when the actor can read sets, מיון ראשוני.
-- `app/app/pallet-sets/` : active list, voided list, new header, and detail. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services.
+- `app/app/pallet-sets/` : active list with `selected` glimpse, voided list, new header, and detail. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services. `components/app-nav.tsx` is the header menu.
 - `app/app/tables/page.tsx` and the four table screens under `app/app/`. Each table is a condensed list; details and editing open for the selected row.
 - `db/migrations/0000_auth.sql` : the applied auth migration. Ids are `text`. Timestamps are `timestamp` without time zone.
 - `lib/auth.ts` : server-only Better Auth instance. Public sign-up disabled unless this process sets `BOOTSTRAP_SIGN_UP=1` outside production. `nextCookies()` is the only plugin.
@@ -102,7 +102,7 @@ What exists now:
 - 2026-10-31 A package-tare change does not take a date. Recalculating pallet net weight from a chosen date is deferred (`docs/project/todo.md` item 12). Pallet intake still updates voided pallets immediately and leaves active pallets until the next save.
 - 2026-11-02 Pallet net weight is a check constraint: active rows must equal the formula, and voided rows store `greatest(0, formula)`. The composite foreign key cascades `voided` and `grower_id`. Un-void stays unbuilt.
 - 2026-11-02 Set visibility is `scopeForSets` in the query. A hidden set and a missing id both return `NOT_FOUND`. A tare edit rewrites voided pallets in one statement and leaves active pallets until the next save.
-- 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. The add form, only for a writable active set, also reads the three active reference lists.
+- 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. The add form, only for a writable active set, also reads the three active reference lists. A kind change is allowed now; its effect on a future grower balance is todo 13. Dark-mode `danger` is `#D46E66` so the void button is less bright and still clears 4.5:1.
 
 ## Conventions not obvious from the code
 

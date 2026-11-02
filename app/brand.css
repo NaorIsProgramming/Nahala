@@ -70,7 +70,7 @@
 
   --color-border: #4A3A30;              /* decorative dividers */
   --color-input: #8C7A68;               /* form control edges, 4.0:1 on surface (needs 3:1) */
-  --color-danger: #F08A80;              /* 6.9:1 on surface */
+  --color-danger: #D46E66;              /* dimmer than #F08A80; 4.9:1 on surface, 5.4:1 for dark text on the fill */
   --color-danger-foreground: #1C1410;   /* dark text on the danger fill, 7.5:1 */
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 
 import { PALLET_KINDS } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
@@ -9,21 +9,25 @@ import { createPalletSetAction } from "./actions";
 import { idlePalletSetActionState } from "./action-state";
 import { fieldClassName, primaryButtonClassName } from "./classes";
 import { FormError } from "./form-error";
+import { NameSearch } from "./name-search";
 import { submitWithoutReset } from "./submit-form";
 
 type GrowerChoice = { id: string; name: string };
 
 export function NewSetForm({
   growers,
+  commonGrowerIds,
   defaultDate,
 }: {
   growers: GrowerChoice[];
+  commonGrowerIds: string[];
   defaultDate: string;
 }): ReactNode {
   const [state, formAction, pending] = useActionState(
     createPalletSetAction,
     idlePalletSetActionState,
   );
+  const [growerId, setGrowerId] = useState("");
   const errorId = "new-set-error";
   const hasError = state.status === "error";
 
@@ -72,28 +76,19 @@ export function NewSetForm({
           className={`${fieldClassName} tabular-nums`}
         />
       </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="new-grower" className="text-base font-medium text-foreground">
-          מגדל
-        </label>
-        <select
-          id="new-grower"
-          name="growerId"
-          required
-          disabled={pending}
-          defaultValue=""
-          aria-invalid={hasError && state.field === "growerId"}
-          aria-describedby={hasError && state.field === "growerId" ? errorId : undefined}
-          className={fieldClassName}
-        >
-          <option value="">בחירה</option>
-          {growers.map((grower) => (
-            <option key={grower.id} value={grower.id}>
-              {grower.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <NameSearch
+        id="new-grower"
+        name="growerId"
+        label="מגדל"
+        options={growers}
+        commonIds={commonGrowerIds}
+        value={growerId}
+        onChange={setGrowerId}
+        required
+        disabled={pending}
+        invalid={hasError && state.field === "growerId"}
+        errorId={errorId}
+      />
       <div className="flex flex-col gap-2">
         <label htmlFor="new-date" className="text-base font-medium text-foreground">
           תאריך קבלה

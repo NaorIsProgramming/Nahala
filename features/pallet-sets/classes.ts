@@ -9,3 +9,6 @@ export const secondaryButtonClassName =
 
 export const dangerButtonClassName =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-danger px-4 text-base font-medium text-danger-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60";
+
+export const compactDangerButtonClassName =
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-danger px-3 text-base font-medium text-danger-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60";

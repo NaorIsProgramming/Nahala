@@ -77,6 +77,7 @@ export function palletSetListPath(
   base: "/app/pallet-sets" | "/app/pallet-sets/voided",
   params: ListSearchParams,
   page: number,
+  selectedId?: string,
 ): string {
   const search = new URLSearchParams();
   if (params.kind) {
@@ -96,6 +97,9 @@ export function palletSetListPath(
   }
   if (page > 1) {
     search.set("page", String(page));
+  }
+  if (selectedId) {
+    search.set("selected", selectedId);
   }
   const query = search.toString();
   return query.length === 0 ? base : `${base}?${query}`;

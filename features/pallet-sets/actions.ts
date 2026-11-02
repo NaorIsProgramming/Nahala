@@ -8,12 +8,14 @@ import {
   addPallets,
   createPalletSet,
   removePallets,
+  updatePalletSet,
   voidPalletSet,
 } from "@/lib/services/pallet-sets";
 import {
   readAddPallets,
   readCreatePalletSet,
   readRemovePallets,
+  readUpdatePalletSet,
   readVoidPalletSet,
   type PalletSetResult,
 } from "@/lib/services/pallet-set-input";
@@ -171,4 +173,42 @@ export async function voidPalletSetAction(
     console.error("pallet-set void action failed");
     return { status: "error", message: SAVE_FAILED_MESSAGE };
   }
+}
+
+export async function updatePalletSetKindAction(
+  _previous: PalletSetActionState,
+  formData: FormData,
+): Promise<PalletSetActionState> {
+  const actor = await getActor();
+  if (!actor) {
+    return { status: "error", message: SIGN_IN_MESSAGE };
+  }
+
+  const revisionText = readFormText(formData, "revision");
+  const revision = /^\d+$/.test(revisionText) ? Number(revisionText) : Number.NaN;
+  const parsed = readUpdatePalletSet({
+    id: readFormText(formData, "id"),
+    revision,
+    kind: readFormText(formData, "kind"),
+  });
+  if (!parsed.ok) {
+    return failureState(parsed);
+  }
+
+  try {
+    const updated = await updatePalletSet(actor, parsed.data);
+    if (!updated.ok) {
+      return failureState(updated);
+    }
+    refreshSet(parsed.data.id);
+    return { status: "success", message: "הסוג נשמר" };
+  } catch {
+    console.error("pallet-set kind action failed");
+    return { status: "error", message: SAVE_FAILED_MESSAGE };
+  }
+}
+
+function readFormText(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
 }

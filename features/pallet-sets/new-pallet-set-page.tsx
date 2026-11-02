@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { BackLink } from "@/components/ui/back-link";
 import { getActor } from "@/lib/access";
-import { listSetGrowers } from "@/lib/services/pallet-sets";
+import { listCommonNameIds, listSetGrowers } from "@/lib/services/pallet-sets";
 
 import { todayInJerusalem } from "./dates";
 import { NewSetForm } from "./new-set-form";
@@ -26,7 +26,10 @@ export async function NewPalletSetPage(): Promise<ReactNode> {
     );
   }
 
-  const growers = await listSetGrowers(actor);
+  const [growers, commonNames] = await Promise.all([
+    listSetGrowers(actor),
+    listCommonNameIds(actor),
+  ]);
   if (!growers.ok) {
     return (
       <PalletSetMessage
@@ -53,7 +56,11 @@ export async function NewPalletSetPage(): Promise<ReactNode> {
       <BackLink href="/app/pallet-sets" label="מיון ראשוני" />
       <h1 className="text-3xl font-semibold tracking-tight">סט חדש</h1>
       <p className="text-base leading-normal text-muted">אפשר לשמור בלי משטחים, ולהוסיף משטח אחר כך.</p>
-      <NewSetForm growers={growers.data} defaultDate={todayInJerusalem()} />
+      <NewSetForm
+        growers={growers.data}
+        commonGrowerIds={commonNames.growers}
+        defaultDate={todayInJerusalem()}
+      />
     </main>
   );
 }

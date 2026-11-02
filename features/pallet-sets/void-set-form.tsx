@@ -5,7 +5,7 @@ import { useActionState, useState, type ReactNode } from "react";
 
 import { voidPalletSetAction } from "./actions";
 import { idlePalletSetActionState } from "./action-state";
-import { dangerButtonClassName, secondaryButtonClassName } from "./classes";
+import { compactDangerButtonClassName, dangerButtonClassName, secondaryButtonClassName } from "./classes";
 import { FormError } from "./form-error";
 import { submitWithoutReset } from "./submit-form";
 
@@ -21,12 +21,12 @@ export function VoidSetForm({ id, revision }: { id: string; revision: number }):
     return (
       <button
         type="button"
-        className={dangerButtonClassName}
+        className={compactDangerButtonClassName}
         onClick={() => {
           setConfirming(true);
         }}
       >
-        <Ban aria-hidden="true" className="size-5" strokeWidth={2} />
+        <Ban aria-hidden="true" className="size-4" strokeWidth={2} />
         ביטול הסט
       </button>
     );
