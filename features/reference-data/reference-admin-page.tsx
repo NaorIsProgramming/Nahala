@@ -14,14 +14,22 @@ import {
 } from "./actions";
 import type { ReferenceRowValues } from "./reference-forms";
 import { ReferenceMasterDetail } from "./reference-master-detail";
+import { safePalletSetReturn } from "@/features/pallet-sets/return-path";
+
 import { referenceTableMeta } from "./table-meta";
 
 type ReferenceAdminPageProps = {
   table: ReferenceTable;
+  returnTo?: string;
+  prefillName?: string;
+  createdField?: string;
 };
 
 export async function ReferenceAdminPage({
   table,
+  returnTo,
+  prefillName,
+  createdField,
 }: ReferenceAdminPageProps): Promise<ReactNode> {
   const actor = await getActor();
   if (!actor) {
@@ -38,6 +46,7 @@ export async function ReferenceAdminPage({
     return <AccessDenied />;
   }
 
+  const safeReturn = safePalletSetReturn(returnTo);
   const rows = listed.data.map((row) => toRowValues(row));
   const createAction = createReferenceAction.bind(null, table);
   const updateAction = updateReferenceAction.bind(null, table);
@@ -57,6 +66,10 @@ export async function ReferenceAdminPage({
         createAction={createAction}
         updateAction={updateAction}
         deactivateAction={deactivateAction}
+        startOnCreate={safeReturn !== null && prefillName !== undefined && prefillName.length > 0}
+        prefillName={prefillName}
+        returnTo={safeReturn ?? undefined}
+        createdField={createdField}
       />
     </main>
   );

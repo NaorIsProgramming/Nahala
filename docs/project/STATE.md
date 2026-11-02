@@ -102,7 +102,7 @@ What exists now:
 - 2026-10-31 A package-tare change does not take a date. Recalculating pallet net weight from a chosen date is deferred (`docs/project/todo.md` item 12). Pallet intake still updates voided pallets immediately and leaves active pallets until the next save.
 - 2026-11-02 Pallet net weight is a check constraint: active rows must equal the formula, and voided rows store `greatest(0, formula)`. The composite foreign key cascades `voided` and `grower_id`. Un-void stays unbuilt.
 - 2026-11-02 Set visibility is `scopeForSets` in the query. A hidden set and a missing id both return `NOT_FOUND`. A tare edit rewrites voided pallets in one statement and leaves active pallets until the next save.
-- 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. The add form, only for a writable active set, also reads the three active reference lists. A kind change is allowed now; its effect on a future grower balance is todo 13. Dark-mode `danger` is `#D46E66` so the void button is less bright and still clears 4.5:1.
+- 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. Kind labels are כניסה למיון ראשוני, כניסה למיון סופי, and העברה למיון סופי. A kind, grower, or date change saves on commit. Creating a missing name returns only to an `/app/pallet-sets` path. Dark-mode `danger` is `#D46E66`.
 
 ## Conventions not obvious from the code
 

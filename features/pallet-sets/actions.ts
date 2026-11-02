@@ -175,7 +175,7 @@ export async function voidPalletSetAction(
   }
 }
 
-export async function updatePalletSetKindAction(
+export async function updatePalletSetHeaderAction(
   _previous: PalletSetActionState,
   formData: FormData,
 ): Promise<PalletSetActionState> {
@@ -186,10 +186,15 @@ export async function updatePalletSetKindAction(
 
   const revisionText = readFormText(formData, "revision");
   const revision = /^\d+$/.test(revisionText) ? Number(revisionText) : Number.NaN;
+  const kind = readFormText(formData, "kind");
+  const growerId = readFormText(formData, "growerId");
+  const receivedOn = readFormText(formData, "receivedOn");
   const parsed = readUpdatePalletSet({
     id: readFormText(formData, "id"),
     revision,
-    kind: readFormText(formData, "kind"),
+    ...(kind.length > 0 ? { kind } : {}),
+    ...(growerId.length > 0 ? { growerId } : {}),
+    ...(receivedOn.length > 0 ? { receivedOn } : {}),
   });
   if (!parsed.ok) {
     return failureState(parsed);
@@ -201,9 +206,9 @@ export async function updatePalletSetKindAction(
       return failureState(updated);
     }
     refreshSet(parsed.data.id);
-    return { status: "success", message: "הסוג נשמר" };
+    return { status: "success", message: "השינוי נשמר" };
   } catch {
-    console.error("pallet-set kind action failed");
+    console.error("pallet-set header action failed");
     return { status: "error", message: SAVE_FAILED_MESSAGE };
   }
 }

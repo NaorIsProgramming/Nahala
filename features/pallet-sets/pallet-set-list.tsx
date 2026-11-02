@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { BackLink } from "@/components/ui/back-link";
-import { canWriteSet, getActor } from "@/lib/access";
+import { canWriteReference, canWriteSet, getActor } from "@/lib/access";
 import {
   getPalletSet,
   listCommonNameIds,
@@ -99,6 +99,7 @@ export async function PalletSetListPage({
         params={params}
         growers={growers}
         commonGrowerIds={commonNames.growers}
+        canCreateGrower={canWriteReference(actor, "growers")}
       />
       {!parsed.ok ? <FormError id="list-error" message={parsed.message} /> : null}
       {parsed.ok && listed && !listed.ok ? (

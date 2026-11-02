@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 
 import { addPalletAction } from "./actions";
 import { idlePalletSetActionState, type PalletSetActionState } from "./action-state";
 import { fieldClassName, primaryButtonClassName } from "./classes";
 import { FormError } from "./form-error";
 import { NameSearch } from "./name-search";
+import { clearPalletDraft, readPalletDraft } from "./pallet-draft";
 import { submitWithoutReset } from "./submit-form";
 
 type NamedChoice = { id: string; name: string };
@@ -40,6 +41,11 @@ export function AddPalletForm({
   commonYieldIds,
   commonPackageIds,
   commonPalletTypeIds,
+  canCreateYield,
+  canCreatePackage,
+  canCreatePalletType,
+  createdField,
+  createdId,
 }: {
   setId: string;
   revision: number;
@@ -49,9 +55,35 @@ export function AddPalletForm({
   commonYieldIds: string[];
   commonPackageIds: string[];
   commonPalletTypeIds: string[];
+  canCreateYield: boolean;
+  canCreatePackage: boolean;
+  canCreatePalletType: boolean;
+  createdField?: string;
+  createdId?: string;
 }): ReactNode {
   const [state, formAction, pending] = useActionState(addPalletAction, idlePalletSetActionState);
   const [fields, setFields] = useState<AddFields>(emptyFields);
+  useEffect(() => {
+    const draft = readPalletDraft();
+    const owned = ["yieldTypeId", "packageTypeId", "palletTypeId", "palletNumber", "packageAmount", "grossWeightKilograms"];
+    if (!draft || !owned.includes(draft.field)) {
+      return;
+    }
+    clearPalletDraft();
+    // The draft is written in sessionStorage before leaving this page, so it can only be read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the pallet form the user left
+    setFields({
+      palletNumber: draft.values.palletNumber ?? "",
+      yieldTypeId: draft.values.yieldTypeId ?? "",
+      packageTypeId: draft.values.packageTypeId ?? "",
+      palletTypeId: draft.values.palletTypeId ?? "",
+      packageAmount: draft.values.packageAmount ?? "",
+      grossWeightKilograms: draft.values.grossWeightKilograms ?? "",
+      ...(createdField !== undefined && createdId !== undefined && createdField === draft.field
+        ? { [createdField]: createdId }
+        : {}),
+    });
+  }, [createdField, createdId]);
   const [seenState, setSeenState] = useState<PalletSetActionState>(state);
   let shown = fields;
   if (state !== seenState) {
@@ -101,6 +133,7 @@ export function AddPalletForm({
         required
         options={yieldTypes}
         commonIds={commonYieldIds}
+        createHref={canCreateYield ? "/app/yield-types" : undefined}
         onChange={(value) => {
           setFields((current) => ({ ...current, yieldTypeId: value }));
         }}
@@ -116,6 +149,7 @@ export function AddPalletForm({
         required
         options={packageTypes}
         commonIds={commonPackageIds}
+        createHref={canCreatePackage ? "/app/package-types" : undefined}
         onChange={(value) => {
           const selected = packageTypes.find((option) => option.id === value);
           setFields((current) => ({
@@ -139,6 +173,7 @@ export function AddPalletForm({
         required
         options={palletTypes}
         commonIds={commonPalletTypeIds}
+        createHref={canCreatePalletType ? "/app/pallet-types" : undefined}
         onChange={(value) => {
           setFields((current) => ({ ...current, palletTypeId: value }));
         }}

@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { PALLET_KINDS } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 
+import { DateField } from "./date-field";
+
 import { fieldClassName, primaryButtonClassName, secondaryButtonClassName } from "./classes";
 import { FilterNameSearch } from "./name-search";
 import { hasListFilters, palletSetListPath, type ListSearchParams } from "./list-query";
@@ -15,32 +17,29 @@ export function SetFilters({
   params,
   growers,
   commonGrowerIds,
+  canCreateGrower,
 }: {
   base: "/app/pallet-sets" | "/app/pallet-sets/voided";
   params: ListSearchParams;
   growers: GrowerChoice[];
   commonGrowerIds: string[];
+  canCreateGrower: boolean;
 }): ReactNode {
+  const kindOptions = PALLET_KINDS.map((kind) => ({
+    id: kind,
+    name: PALLET_KIND_LABELS[kind],
+  }));
   return (
     <form method="get" className="grid gap-4 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="filter-kind" className="text-base font-medium text-foreground">
-          סוג
-        </label>
-        <select
-          id="filter-kind"
-          name="kind"
-          defaultValue={params.kind ?? ""}
-          className={fieldClassName}
-        >
-          <option value="">כל הסוגים</option>
-          {PALLET_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {PALLET_KIND_LABELS[kind]}
-            </option>
-          ))}
-        </select>
-      </div>
+      <FilterNameSearch
+        key={params.kind ?? "all-kinds"}
+        id="filter-kind"
+        name="kind"
+        label="סוג"
+        options={kindOptions}
+        commonIds={[]}
+        defaultId={params.kind ?? ""}
+      />
       <FilterNameSearch
         key={params.grower ?? "all"}
         id="filter-grower"
@@ -49,6 +48,7 @@ export function SetFilters({
         options={growers}
         commonIds={commonGrowerIds}
         defaultId={params.grower ?? ""}
+        createHref={canCreateGrower ? "/app/growers" : undefined}
       />
       <div className="flex flex-col gap-2">
         <label htmlFor="filter-reference" className="text-base font-medium text-foreground">
@@ -64,32 +64,8 @@ export function SetFilters({
           className={`${fieldClassName} tabular-nums`}
         />
       </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="filter-from" className="text-base font-medium text-foreground">
-          מתאריך
-        </label>
-        <input
-          id="filter-from"
-          name="from"
-          type="date"
-          dir="ltr"
-          defaultValue={params.from ?? ""}
-          className={`${fieldClassName} tabular-nums`}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="filter-to" className="text-base font-medium text-foreground">
-          עד תאריך
-        </label>
-        <input
-          id="filter-to"
-          name="to"
-          type="date"
-          dir="ltr"
-          defaultValue={params.to ?? ""}
-          className={`${fieldClassName} tabular-nums`}
-        />
-      </div>
+      <DateField id="filter-from" name="from" label="מתאריך" defaultIso={params.from ?? ""} />
+      <DateField id="filter-to" name="to" label="עד תאריך" defaultIso={params.to ?? ""} />
       <div className="flex flex-wrap items-end gap-3">
         <button type="submit" className={primaryButtonClassName}>
           סינון

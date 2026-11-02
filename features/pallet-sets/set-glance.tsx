@@ -47,7 +47,10 @@ export function SetGlance({
   pallets: GlancePallet[];
 }): ReactNode {
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-20 max-h-[45vh] overflow-y-auto border-t border-border bg-surface px-4 py-3">
+    <aside
+      data-set-glance=""
+      className="fixed inset-x-0 bottom-0 z-20 max-h-[45vh] overflow-y-auto border-t border-border bg-surface px-4 py-3"
+    >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-baseline gap-3">

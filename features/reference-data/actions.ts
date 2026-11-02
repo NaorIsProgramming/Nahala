@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { safePalletSetReturn, withCreatedName } from "@/features/pallet-sets/return-path";
 
 import { getActor } from "@/lib/access";
 import type { ReferenceTable } from "@/lib/access-types";
@@ -70,6 +73,9 @@ export async function createReferenceAction(
     raw.countsInGrowerInventory = formData.get("countsInGrowerInventory") === "true";
   }
 
+  const returnTo = safePalletSetReturn(readText(formData, "returnTo"));
+  const createdField = readText(formData, "createdField");
+  let createdId: string | null = null;
   try {
     const parsed = readCreateReference(table, raw);
     if (!parsed.ok) {
@@ -79,12 +85,27 @@ export async function createReferenceAction(
     if (!created.ok) {
       return toState(created);
     }
+    createdId = created.data.id;
     revalidatePath(meta.href);
-    return { status: "success" };
+    revalidatePath("/app/pallet-sets");
   } catch {
     console.error("reference-data create action failed");
     return { status: "error", message: SAVE_FAILED_MESSAGE };
   }
+  if (createdId !== null && returnTo !== null && isCreatedField(createdField)) {
+    redirect(withCreatedName(returnTo, createdField, createdId));
+  }
+  return { status: "success" };
+}
+
+function isCreatedField(value: string): boolean {
+  return (
+    value === "grower" ||
+    value === "growerId" ||
+    value === "yieldTypeId" ||
+    value === "packageTypeId" ||
+    value === "palletTypeId"
+  );
 }
 
 export async function updateReferenceAction(

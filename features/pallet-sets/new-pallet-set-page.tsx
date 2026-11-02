@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { BackLink } from "@/components/ui/back-link";
-import { getActor } from "@/lib/access";
+import { canWriteReference, getActor } from "@/lib/access";
 import { listCommonNameIds, listSetGrowers } from "@/lib/services/pallet-sets";
 
 import { todayInJerusalem } from "./dates";
@@ -10,7 +10,13 @@ import { NewSetForm } from "./new-set-form";
 import { PalletSetMessage } from "./screen-message";
 import { canWriteAnySet } from "./visibility";
 
-export async function NewPalletSetPage(): Promise<ReactNode> {
+export async function NewPalletSetPage({
+  createdField,
+  createdId,
+}: {
+  createdField?: string;
+  createdId?: string;
+}): Promise<ReactNode> {
   const actor = await getActor();
   if (!actor) {
     redirect("/sign-in");
@@ -60,6 +66,9 @@ export async function NewPalletSetPage(): Promise<ReactNode> {
         growers={growers.data}
         commonGrowerIds={commonNames.growers}
         defaultDate={todayInJerusalem()}
+        canCreateGrower={canWriteReference(actor, "growers")}
+        createdField={createdField}
+        createdId={createdId}
       />
     </main>
   );

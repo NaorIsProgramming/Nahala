@@ -29,6 +29,10 @@ type ReferenceMasterDetailProps = {
   createAction: ReferenceAction;
   updateAction: ReferenceAction;
   deactivateAction: ReferenceAction;
+  startOnCreate?: boolean;
+  prefillName?: string;
+  returnTo?: string;
+  createdField?: string;
 };
 
 const rowButtonClassName =
@@ -44,12 +48,16 @@ export function ReferenceMasterDetail({
   createAction,
   updateAction,
   deactivateAction,
+  startOnCreate = false,
+  prefillName,
+  returnTo,
+  createdField,
 }: ReferenceMasterDetailProps): ReactNode {
   const filterId = useId();
   const panelRef = useRef<HTMLElement>(null);
   const skipPanelScroll = useRef(true);
   const [query, setQuery] = useState("");
-  const [selection, setSelection] = useState<Selection>(null);
+  const [selection, setSelection] = useState<Selection>(startOnCreate ? "create" : null);
   const selectedRow =
     selection === null || selection === "create"
       ? undefined
@@ -156,6 +164,9 @@ export function ReferenceMasterDetail({
               tareRequired={tareRequired}
               hasInventory={hasInventory}
               hasPackageMeasures={hasPackageMeasures}
+              defaultName={prefillName}
+              returnTo={returnTo}
+              createdField={createdField}
             />
           </>
         ) : selectedRow ? (

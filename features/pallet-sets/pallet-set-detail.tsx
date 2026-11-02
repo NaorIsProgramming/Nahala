@@ -5,21 +5,29 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { BackLink } from "@/components/ui/back-link";
-import { canWriteSet, getActor } from "@/lib/access";
+import { canWriteReference, canWriteSet, getActor } from "@/lib/access";
 import type { Actor } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 import { listActiveReference } from "@/lib/services/reference-data";
-import { getPalletSet, listCommonNameIds } from "@/lib/services/pallet-sets";
+import { getPalletSet, listCommonNameIds, listSetGrowers } from "@/lib/services/pallet-sets";
 
 import { AddPalletForm } from "./add-pallet-form";
 import { formatFullDate } from "./dates";
-import { KindForm } from "./kind-form";
 import { PalletTable } from "./pallet-table";
 import { PalletSetMessage } from "./screen-message";
 import { ScrollToPallet } from "./scroll-to-pallet";
+import { SetHeaderForm } from "./set-header-form";
 import { VoidSetForm } from "./void-set-form";
 
-export async function PalletSetDetailPage({ id }: { id: string }): Promise<ReactNode> {
+export async function PalletSetDetailPage({
+  id,
+  createdField,
+  createdId,
+}: {
+  id: string;
+  createdField?: string;
+  createdId?: string;
+}): Promise<ReactNode> {
   const actor = await getActor();
   if (!actor) {
     redirect("/sign-in");
@@ -49,7 +57,10 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
 
   const set = detail.data;
   const canChange = !set.voided && canWriteSet(actor, set.growerId, set.kind);
-  const formOptions = canChange ? await loadFormOptions(actor) : null;
+  const [formOptions, growers] = await Promise.all([
+    canChange ? loadFormOptions(actor) : Promise.resolve(null),
+    canChange ? listSetGrowers(actor) : Promise.resolve(null),
+  ]);
   const backHref = set.voided ? "/app/pallet-sets/voided" : "/app/pallet-sets";
   const backLabel = set.voided ? "מבוטלים" : "מיון ראשוני";
 
@@ -71,22 +82,28 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
           </p>
         ) : null}
       </div>
-      <dl className="grid gap-4 sm:grid-cols-3">
-        {canChange ? (
-          <KindForm id={set.id} revision={set.revision} kind={set.kind} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        {canChange && growers?.ok ? (
+          <SetHeaderForm
+            id={set.id}
+            revision={set.revision}
+            kind={set.kind}
+            growerId={set.growerId}
+            growers={growers.data}
+            commonGrowerIds={formOptions?.status === "ready" ? formOptions.commonGrowerIds : []}
+            receivedOn={set.receivedOn}
+            canCreateGrower={canWriteReference(actor, "growers")}
+            createdField={createdField}
+            createdId={createdId}
+          />
         ) : (
-          <DetailItem label="סוג" value={PALLET_KIND_LABELS[set.kind]} />
+          <>
+            <DetailItem label="סוג" value={PALLET_KIND_LABELS[set.kind]} />
+            <DetailItem label="מגדל" value={set.growerName} />
+            <DetailItem label="תאריך" value={formatFullDate(set.receivedOn)} />
+          </>
         )}
-        <DetailItem label="מגדל" value={set.growerName} />
-        <div className="flex flex-col gap-1">
-          <dt className="text-base font-medium text-foreground">תאריך</dt>
-          <dd className="text-base leading-normal text-foreground">
-            <bdi dir="ltr" className="tabular-nums">
-              {formatFullDate(set.receivedOn)}
-            </bdi>
-          </dd>
-        </div>
-      </dl>
+      </div>
       <h2 className="text-xl font-semibold tracking-tight">משטחים</h2>
       <PalletTable
         pallets={set.pallets}
@@ -104,6 +121,11 @@ export async function PalletSetDetailPage({ id }: { id: string }): Promise<React
           commonYieldIds={formOptions.commonYieldIds}
           commonPackageIds={formOptions.commonPackageIds}
           commonPalletTypeIds={formOptions.commonPalletTypeIds}
+          canCreateYield={canWriteReference(actor, "yield_types")}
+          canCreatePackage={canWriteReference(actor, "package_types")}
+          canCreatePalletType={canWriteReference(actor, "pallet_types")}
+          createdField={createdField}
+          createdId={createdId}
         />
       ) : null}
       {canChange && formOptions?.status === "empty" ? (
@@ -144,6 +166,7 @@ type FormOptions =
       commonYieldIds: string[];
       commonPackageIds: string[];
       commonPalletTypeIds: string[];
+      commonGrowerIds: string[];
     }
   | { status: "empty" }
   | { status: "unavailable" };
@@ -173,5 +196,6 @@ async function loadFormOptions(actor: Actor): Promise<FormOptions> {
     commonYieldIds: commonNames.yieldTypes,
     commonPackageIds: commonNames.packageTypes,
     commonPalletTypeIds: commonNames.palletTypes,
+    commonGrowerIds: commonNames.growers,
   };
 }

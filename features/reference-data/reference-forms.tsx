@@ -54,9 +54,15 @@ export function CreateReferenceForm({
   tareRequired,
   hasInventory,
   hasPackageMeasures,
+  defaultName,
+  returnTo,
+  createdField,
 }: ReferenceFormFields & {
   idPrefix: string;
   action: ReferenceAction;
+  defaultName?: string;
+  returnTo?: string;
+  createdField?: string;
 }): ReactNode {
   const [state, formAction, pending] = useActionState(action, idleReferenceActionState);
 
@@ -67,6 +73,8 @@ export function CreateReferenceForm({
       }}
       className="flex flex-col gap-4"
     >
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
+      {createdField ? <input type="hidden" name="createdField" value={createdField} /> : null}
       <ReferenceFields
         idPrefix={idPrefix}
         state={state}
@@ -74,6 +82,7 @@ export function CreateReferenceForm({
         tareRequired={tareRequired}
         hasInventory={hasInventory}
         hasPackageMeasures={hasPackageMeasures}
+        defaultName={defaultName}
         clearOnSuccess
         disabled={pending}
       />

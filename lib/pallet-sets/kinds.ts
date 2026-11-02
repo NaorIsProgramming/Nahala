@@ -13,11 +13,11 @@ export const PACKAGE_FLOW = {
 
 export type PackageFlow = (typeof PACKAGE_FLOW)[keyof typeof PACKAGE_FLOW];
 
-/** Hebrew labels for the kind codes. The letters stay LTR in the UI. */
+/** Hebrew names for the kind codes. The stored values stay A, B, and C. */
 export const PALLET_KIND_LABELS = {
-  A: "א",
-  B: "ב",
-  C: "ג",
+  A: "כניסה למיון ראשוני",
+  B: "כניסה למיון סופי",
+  C: "העברה למיון סופי",
 } as const satisfies Record<PalletKind, string>;
 
 export function kindsForPackageFlow(flow: PackageFlow): PalletKind[] {

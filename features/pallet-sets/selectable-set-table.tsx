@@ -2,7 +2,7 @@
 
 import { Ban } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 import type { PalletKind } from "@/lib/access-types";
@@ -39,6 +39,21 @@ export function SelectableSetTable({
     setSeenSelected(selectedId);
     setActiveId(selectedId);
   }
+
+  useEffect(() => {
+    if (!activeId) {
+      return;
+    }
+    const row = document.getElementById(`set-row-${activeId}`);
+    const panel = document.querySelector("[data-set-glance]");
+    if (!row || !(panel instanceof HTMLElement)) {
+      return;
+    }
+    const overlap = row.getBoundingClientRect().bottom - panel.getBoundingClientRect().top;
+    if (overlap > -8) {
+      window.scrollBy({ top: overlap + 12 });
+    }
+  }, [activeId]);
 
   function select(id: string): void {
     setActiveId(id);
@@ -105,8 +120,13 @@ export function SelectableSetTable({
             const selected = set.id === (activeId ?? selectedId);
             return (
               <tr
+                id={`set-row-${set.id}`}
                 key={set.id}
-                className={selected ? "cursor-pointer bg-background" : "cursor-pointer"}
+                className={
+                  selected
+                    ? "cursor-pointer scroll-mb-[45vh] bg-background"
+                    : "cursor-pointer scroll-mb-[45vh]"
+                }
                 onClick={() => {
                   select(set.id);
                 }}
@@ -125,7 +145,7 @@ export function SelectableSetTable({
                     </bdi>
                   </button>
                 </td>
-                <td className={cellClassName}>{PALLET_KIND_LABELS[set.kind]}</td>
+                <td className={`${cellClassName} break-words`}>{PALLET_KIND_LABELS[set.kind]}</td>
                 <td className={`${cellClassName} break-words`}>{set.growerName}</td>
                 <td className={cellClassName}>
                   <bdi dir="ltr" className="tabular-nums">
