@@ -2,7 +2,7 @@
 
 import { Ban } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
 import type { PalletKind } from "@/lib/access-types";
@@ -39,21 +39,6 @@ export function SelectableSetTable({
     setSeenSelected(selectedId);
     setActiveId(selectedId);
   }
-
-  useEffect(() => {
-    if (!activeId) {
-      return;
-    }
-    const row = document.getElementById(`set-row-${activeId}`);
-    const panel = document.querySelector("[data-set-glance]");
-    if (!row || !(panel instanceof HTMLElement)) {
-      return;
-    }
-    const overlap = row.getBoundingClientRect().bottom - panel.getBoundingClientRect().top;
-    if (overlap > -8) {
-      window.scrollBy({ top: overlap + 12 });
-    }
-  }, [activeId]);
 
   function select(id: string): void {
     setActiveId(id);
@@ -122,11 +107,7 @@ export function SelectableSetTable({
               <tr
                 id={`set-row-${set.id}`}
                 key={set.id}
-                className={
-                  selected
-                    ? "cursor-pointer scroll-mb-[45vh] bg-background"
-                    : "cursor-pointer scroll-mb-[45vh]"
-                }
+                className={selected ? "cursor-pointer bg-background" : "cursor-pointer"}
                 onClick={() => {
                   select(set.id);
                 }}

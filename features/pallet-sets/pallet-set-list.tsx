@@ -75,9 +75,7 @@ export async function PalletSetListPage({
   const filterPath = palletSetListPath(base, params, page);
 
   return (
-    <main
-      className={`mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 ${glance ? "pb-[50vh]" : "pb-16"}`}
-    >
+    <main className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 overflow-hidden px-4 pb-4">
       <BackLink href={voided ? "/app/pallet-sets" : "/app"} label={voided ? "מיון ראשוני" : "נחלה"} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
@@ -110,6 +108,7 @@ export async function PalletSetListPage({
           {page > 1 ? "אין סטים בעמוד זה." : voided ? "אין סטים מבוטלים." : "אין סטים פעילים."}
         </p>
       ) : null}
+      <div className="min-h-0 flex-1 overflow-y-auto">
       {parsed.ok && listed?.ok && sets.length > 0 ? (
         <SelectableSetTable
           sets={sets}
@@ -119,7 +118,7 @@ export async function PalletSetListPage({
         />
       ) : null}
       {parsed.ok && listed?.ok && (page > 1 || hasNext) ? (
-        <nav aria-label="עמודים" className="flex flex-wrap items-center gap-3">
+        <nav aria-label="עמודים" className="mt-4 flex flex-wrap items-center gap-3">
           {page > 1 ? (
             <Link
               href={palletSetListPath(base, params, page - 1, selectedId)}
@@ -144,6 +143,7 @@ export async function PalletSetListPage({
           ) : null}
         </nav>
       ) : null}
+      </div>
       {glance ? (
         <SetGlance
           setId={glance.id}

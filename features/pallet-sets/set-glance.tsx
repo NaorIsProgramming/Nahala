@@ -47,12 +47,8 @@ export function SetGlance({
   pallets: GlancePallet[];
 }): ReactNode {
   return (
-    <aside
-      data-set-glance=""
-      className="fixed inset-x-0 bottom-0 z-20 max-h-[45vh] overflow-y-auto border-t border-border bg-surface px-4 py-3"
-    >
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <aside className="flex h-[40vh] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
           <div className="flex flex-wrap items-baseline gap-3">
             <p className="text-base font-medium text-foreground">
               אסמכתא{" "}
@@ -75,9 +71,9 @@ export function SetGlance({
           </div>
         </div>
         {pallets.length === 0 ? (
-          <p className="text-base leading-normal text-muted">אין משטחים בסט זה.</p>
+          <p className="px-4 py-3 text-base leading-normal text-muted">אין משטחים בסט זה.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full min-w-[48rem] border-collapse text-base">
               <thead>
                 <tr>
@@ -144,7 +140,6 @@ export function SetGlance({
             </table>
           </div>
         )}
-      </div>
     </aside>
   );
 }

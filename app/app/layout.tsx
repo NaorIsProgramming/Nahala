@@ -30,8 +30,8 @@ export default async function AppLayout({
         }));
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="flex flex-wrap items-center gap-2 p-4">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+      <header className="flex shrink-0 flex-wrap items-center gap-2 p-4">
         <AppNav tables={tables} showSets={actor !== null && canReadSets(actor)} />
         <SignOutButton />
         <p className="min-w-0 truncate text-base text-muted">
@@ -41,7 +41,7 @@ export default async function AppLayout({
           <ThemeToggle />
         </div>
       </header>
-      {children}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
     </div>
   );
 }
