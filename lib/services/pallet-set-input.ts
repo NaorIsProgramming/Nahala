@@ -6,7 +6,7 @@ import { PALLET_KINDS, type PalletKind } from "@/lib/access-types";
 import { RECOMMENDED_PACKAGE_AMOUNT_MAX } from "@/lib/reference-limits";
 
 const MAX_PALLETS_PER_REQUEST = 500;
-const GROSS_WEIGHT_MAX_GRAMS = 100_000_000;
+export const PALLET_GROSS_WEIGHT_MAX_GRAMS = 100_000_000;
 const POSTGRES_INT_MAX = 2_147_483_647;
 
 export type PalletSetCode =
@@ -188,7 +188,7 @@ const palletSchema = z.strictObject({
   packageTypeId: z.uuid(),
   palletTypeId: z.uuid(),
   packageAmount: z.number().int().min(1).max(RECOMMENDED_PACKAGE_AMOUNT_MAX),
-  grossWeightGrams: z.number().int().min(0).max(GROSS_WEIGHT_MAX_GRAMS),
+  grossWeightGrams: z.number().int().min(0).max(PALLET_GROSS_WEIGHT_MAX_GRAMS),
 });
 
 const palletUpdateSchema = z
@@ -199,7 +199,7 @@ const palletUpdateSchema = z
     packageTypeId: z.uuid().optional(),
     palletTypeId: z.uuid().optional(),
     packageAmount: z.number().int().min(1).max(RECOMMENDED_PACKAGE_AMOUNT_MAX).optional(),
-    grossWeightGrams: z.number().int().min(0).max(GROSS_WEIGHT_MAX_GRAMS).optional(),
+    grossWeightGrams: z.number().int().min(0).max(PALLET_GROSS_WEIGHT_MAX_GRAMS).optional(),
   })
   .refine(
     (value) =>

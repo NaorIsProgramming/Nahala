@@ -31,7 +31,8 @@ Users and roles: pallet intake uses `access_grants` (global read or write, growe
 - Foundation audit (2026-10-28, `docs/project/audits/foundation-audit.md`): no critical or high findings. Applied: a running production process rejects a `BETTER_AUTH_URL` that does not start with `https://`, startup fails if `BETTER_AUTH_SECRETS` is set, `next dev` binds to `127.0.0.1`, and Node 22.22.1 is in `.nvmrc` and `engines`.
 - Pallet intake task 1 is built: growers, yield types, package types, and pallet types, plus `access_grants`. Migrations `0001_nosy_the_call.sql` and `0002_flat_bloodstorm.sql` are applied locally. Package tare, net weight, and the recommended package count are optional.
 - Pallet intake task 2 is built: `pallet_sets`, `pallets`, `audit_events`, and `audit_subjects`. Migration `0003_pallet_sets.sql` is applied locally.
-- Pallet intake task 3 is built: set services, `scopeForSets`, audit writes, and the voided tare update. No set screens yet. Briefs 11–13 are not started. `/api/v1` still waits on an API-key decision.
+- Pallet intake task 3 is built: set services, `scopeForSets`, audit writes, and the voided tare update.
+- Pallet intake task 4 is built: מיון ראשוני list, detail, one-pallet add and remove, void, the voided list, and a header-only new set. The grid is brief 12. `/api/v1` still waits on an API-key decision.
 
 ## Architecture map
 
@@ -57,14 +58,14 @@ What exists now:
 - `lib/services/pallet-sets.ts` : list, detail, reference lookup, create, header update, pallet changes, void, and the set-form grower list. `lib/pallet-sets/kinds.ts` and `lib/pallet-sets/net-weight.ts` have no database import.
 - `lib/kilograms.ts` : kilogram text to integer grams, no `server-only` import
 - `components/ui/launcher-tile.tsx` : the shared launcher tile
-- `app/app/page.tsx` : launcher. The only tile so far is טבלאות.
+- `app/app/page.tsx` : launcher. Tiles are טבלאות and, when the actor can read sets, מיון ראשוני.
+- `app/app/pallet-sets/` : active list, voided list, new header, and detail. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services.
 - `app/app/tables/page.tsx` and the four table screens under `app/app/`. Each table is a condensed list; details and editing open for the selected row.
 - `db/migrations/0000_auth.sql` : the applied auth migration. Ids are `text`. Timestamps are `timestamp` without time zone.
 - `lib/auth.ts` : server-only Better Auth instance. Public sign-up disabled unless this process sets `BOOTSTRAP_SIGN_UP=1` outside production. `nextCookies()` is the only plugin.
 - `lib/auth-client.ts` : browser Better Auth client. Same-origin `/api/auth`. No server imports.
 - `lib/session.ts` : server-only `getSession`, wrapped in React `cache()`
-- `app/sign-in/page.tsx`, `app/sign-in/sign-in-form.tsx` : Hebrew sign-in. An existing session redirects to `/app`.
-- `app/app/sign-out-button.tsx` : sign-out. No session redirects to `/sign-in`.
+- `app/sign-in/` : Hebrew sign-in. An existing session redirects to `/app`. Sign-out is on `/app`. No session redirects to `/sign-in`.
 - `app/api/auth/[...all]/route.ts` : `GET`, `POST`, `PUT`, `PATCH`, `DELETE` from `toNextJsHandler`
 - `next.config.ts` : static security headers for all routes. HSTS and `upgrade-insecure-requests` only when `NODE_ENV` is production. No nonce, no `proxy.ts`.
 - `drizzle.config.ts` : Kit config. Uses `MIGRATE_DATABASE_URL`. Does not import `db/index.ts`.
@@ -101,6 +102,7 @@ What exists now:
 - 2026-10-31 A package-tare change does not take a date. Recalculating pallet net weight from a chosen date is deferred (`docs/project/todo.md` item 12). Pallet intake still updates voided pallets immediately and leaves active pallets until the next save.
 - 2026-11-02 Pallet net weight is a check constraint: active rows must equal the formula, and voided rows store `greatest(0, formula)`. The composite foreign key cascades `voided` and `grower_id`. Un-void stays unbuilt.
 - 2026-11-02 Set visibility is `scopeForSets` in the query. A hidden set and a missing id both return `NOT_FOUND`. A tare edit rewrites voided pallets in one statement and leaves active pallets until the next save.
+- 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. The add form, only for a writable active set, also reads the three active reference lists.
 
 ## Conventions not obvious from the code
 
@@ -113,7 +115,6 @@ What exists now:
 ## Known issues and risks
 
 - This machine’s Node v22.22.1 reports `process.features.typescript` false, so `node --experimental-strip-types` throws `ERR_NO_TYPESCRIPT`. The seed uses `db/register-seed.mjs` and the installed TypeScript compiler instead. The version is pinned; the loader stays.
-- Audit leftovers are listed under Deferred.
 
 ## Deferred
 
@@ -132,7 +133,7 @@ From the 2026-10-28 foundation audit. Not changed by the fixes applied that day:
 
 ## Next up
 
-1. Pallet-set list, detail, and void, starting at `docs/project/tasks/11-pallet-set-list.md`.
+1. Pallet-set entry grid, starting at `docs/project/tasks/12-pallet-set-entry.md`.
 2. API-key decision before any `/api/v1` route.
 3. Deployment plan for the deferred items above.
 

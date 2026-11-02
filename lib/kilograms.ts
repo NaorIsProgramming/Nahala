@@ -7,7 +7,10 @@ const KILOGRAM_PATTERN = /^(\d{1,6})(?:\.(\d{1,3}))?$/;
  * The whole kilograms and the thousandths are converted separately, so a
  * value such as "1.005" cannot be rounded by a binary float.
  */
-export function parseKilogramsToGrams(input: string): number | null {
+export function parseKilogramsToGrams(
+  input: string,
+  maxGrams: number = TARE_MAX_GRAMS,
+): number | null {
   const match = KILOGRAM_PATTERN.exec(input.trim());
   if (!match) {
     return null;
@@ -22,7 +25,7 @@ export function parseKilogramsToGrams(input: string): number | null {
   const wholeGrams = integerDigits(whole) * 1000;
   const fractionGrams = integerDigits(fraction.padEnd(3, "0"));
   const grams = wholeGrams + fractionGrams;
-  if (!Number.isSafeInteger(grams) || grams > TARE_MAX_GRAMS) {
+  if (!Number.isSafeInteger(grams) || grams > maxGrams) {
     return null;
   }
 

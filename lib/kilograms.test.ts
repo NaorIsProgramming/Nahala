@@ -13,6 +13,14 @@ describe("kilograms", () => {
     expect(parseKilogramsToGrams(" 1.5 ")).toBe(1500);
   });
 
+  it("accepts a heavier gross weight when the caller raises the cap", () => {
+    expect(parseKilogramsToGrams("500", 100_000_000)).toBe(500_000);
+    expect(parseKilogramsToGrams("100.001", 100_000_000)).toBe(100_001);
+    expect(parseKilogramsToGrams("100000", 100_000_000)).toBe(100_000_000);
+    expect(parseKilogramsToGrams("100001", 100_000_000)).toBeNull();
+    expect(parseKilogramsToGrams("100.001")).toBeNull();
+  });
+
   it("rejects values the screen must not store", () => {
     expect(parseKilogramsToGrams("100.001")).toBeNull();
     expect(parseKilogramsToGrams("1.2345")).toBeNull();

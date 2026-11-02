@@ -1,0 +1,272 @@
+"use client";
+
+import { useActionState, useState, type ReactNode } from "react";
+
+import { addPalletAction } from "./actions";
+import { idlePalletSetActionState, type PalletSetActionState } from "./action-state";
+import { fieldClassName, primaryButtonClassName } from "./classes";
+import { FormError } from "./form-error";
+import { submitWithoutReset } from "./submit-form";
+
+type NamedChoice = { id: string; name: string };
+
+type PackageChoice = NamedChoice & { recommendedPackageAmount: number | null };
+
+type AddFields = {
+  palletNumber: string;
+  yieldTypeId: string;
+  packageTypeId: string;
+  palletTypeId: string;
+  packageAmount: string;
+  grossWeightKilograms: string;
+};
+
+const emptyFields: AddFields = {
+  palletNumber: "",
+  yieldTypeId: "",
+  packageTypeId: "",
+  palletTypeId: "",
+  packageAmount: "",
+  grossWeightKilograms: "",
+};
+
+export function AddPalletForm({
+  setId,
+  revision,
+  yieldTypes,
+  packageTypes,
+  palletTypes,
+}: {
+  setId: string;
+  revision: number;
+  yieldTypes: NamedChoice[];
+  packageTypes: PackageChoice[];
+  palletTypes: NamedChoice[];
+}): ReactNode {
+  const [state, formAction, pending] = useActionState(addPalletAction, idlePalletSetActionState);
+  const [fields, setFields] = useState<AddFields>(emptyFields);
+  const [seenState, setSeenState] = useState<PalletSetActionState>(state);
+  let shown = fields;
+  if (state !== seenState) {
+    shown =
+      state.status === "success"
+        ? { ...fields, palletNumber: "", grossWeightKilograms: "" }
+        : fields;
+    setSeenState(state);
+    setFields(shown);
+  }
+
+  const errorId = "add-pallet-error";
+  const hasError = state.status === "error";
+  const invalidField = hasError ? state.field : undefined;
+
+  return (
+    <form
+      onSubmit={(event) => {
+        submitWithoutReset(event, formAction);
+      }}
+      className="grid gap-4 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      <input type="hidden" name="setId" value={setId} />
+      <input type="hidden" name="revision" value={revision} />
+      <h2 className="text-xl font-semibold tracking-tight sm:col-span-2 lg:col-span-3">הוספת משטח</h2>
+      <Field
+        id="add-pallet-number"
+        name="palletNumber"
+        label="מספר משטח"
+        value={shown.palletNumber}
+        invalid={invalidField === "palletNumber"}
+        errorId={errorId}
+        disabled={pending}
+        numeric
+        onChange={(value) => {
+          setFields((current) => ({ ...current, palletNumber: value }));
+        }}
+      />
+      <ChoiceField
+        id="add-yield"
+        name="yieldTypeId"
+        label="סוג יבול"
+        value={shown.yieldTypeId}
+        invalid={invalidField === "yieldTypeId"}
+        errorId={errorId}
+        disabled={pending}
+        options={yieldTypes}
+        onChange={(value) => {
+          setFields((current) => ({ ...current, yieldTypeId: value }));
+        }}
+      />
+      <ChoiceField
+        id="add-package"
+        name="packageTypeId"
+        label="סוג אריזה"
+        value={shown.packageTypeId}
+        invalid={invalidField === "packageTypeId"}
+        errorId={errorId}
+        disabled={pending}
+        options={packageTypes}
+        onChange={(value) => {
+          const selected = packageTypes.find((option) => option.id === value);
+          setFields((current) => ({
+            ...current,
+            packageTypeId: value,
+            packageAmount:
+              selected?.recommendedPackageAmount == null
+                ? current.packageAmount
+                : String(selected.recommendedPackageAmount),
+          }));
+        }}
+      />
+      <ChoiceField
+        id="add-pallet-type"
+        name="palletTypeId"
+        label="סוג משטח"
+        value={shown.palletTypeId}
+        invalid={invalidField === "palletTypeId"}
+        errorId={errorId}
+        disabled={pending}
+        options={palletTypes}
+        onChange={(value) => {
+          setFields((current) => ({ ...current, palletTypeId: value }));
+        }}
+      />
+      <Field
+        id="add-amount"
+        name="packageAmount"
+        label="כמות אריזות"
+        value={shown.packageAmount}
+        invalid={invalidField === "packageAmount"}
+        errorId={errorId}
+        disabled={pending}
+        numeric
+        onChange={(value) => {
+          setFields((current) => ({ ...current, packageAmount: value }));
+        }}
+      />
+      <Field
+        id="add-gross"
+        name="grossWeightKilograms"
+        label="משקל ברוטו (ק״ג)"
+        value={shown.grossWeightKilograms}
+        invalid={invalidField === "grossWeightKilograms"}
+        errorId={errorId}
+        disabled={pending}
+        numeric
+        onChange={(value) => {
+          setFields((current) => ({ ...current, grossWeightKilograms: value }));
+        }}
+      />
+      {hasError && state.message ? (
+        <div className="sm:col-span-2 lg:col-span-3">
+          <FormError id={errorId} message={state.message} />
+        </div>
+      ) : null}
+      {state.status === "success" && state.message ? (
+        <p className="text-base leading-normal text-foreground sm:col-span-2 lg:col-span-3" role="status">
+          {state.message}
+        </p>
+      ) : null}
+      <div className="sm:col-span-2 lg:col-span-3">
+        <button type="submit" disabled={pending} className={primaryButtonClassName}>
+          הוספה
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Field({
+  id,
+  name,
+  label,
+  value,
+  invalid,
+  errorId,
+  disabled,
+  numeric,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  invalid: boolean;
+  errorId: string;
+  disabled: boolean;
+  numeric: boolean;
+  onChange: (value: string) => void;
+}): ReactNode {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-base font-medium text-foreground">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        required
+        value={value}
+        inputMode={numeric ? "decimal" : "text"}
+        autoComplete="off"
+        dir="ltr"
+        disabled={disabled}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? errorId : undefined}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        className={`${fieldClassName} tabular-nums`}
+      />
+    </div>
+  );
+}
+
+function ChoiceField({
+  id,
+  name,
+  label,
+  value,
+  invalid,
+  errorId,
+  disabled,
+  options,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  invalid: boolean;
+  errorId: string;
+  disabled: boolean;
+  options: NamedChoice[];
+  onChange: (value: string) => void;
+}): ReactNode {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-base font-medium text-foreground">
+        {label}
+      </label>
+      <select
+        id={id}
+        name={name}
+        required
+        value={value}
+        disabled={disabled}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? errorId : undefined}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        className={fieldClassName}
+      >
+        <option value="">בחירה</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}

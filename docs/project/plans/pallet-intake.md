@@ -358,7 +358,7 @@ Task 3 writes the audit rows because they have to commit in the same transaction
 | 1. Reference data and admin | `docs/project/tasks/08-reference-data.md` | done |
 | 2. Pallet-set schema and migration | `docs/project/tasks/09-pallet-set-schema.md` | done |
 | 3. Services, access checks, and tests | `docs/project/tasks/10-pallet-set-services.md` | done |
-| 4. List, detail, void, voided view | `docs/project/tasks/11-pallet-set-list.md` | not started |
+| 4. List, detail, void, voided view | `docs/project/tasks/11-pallet-set-list.md` | done |
 | 5. Entry and edit screen | `docs/project/tasks/12-pallet-set-entry.md` | not started |
 | 6. History screen | `docs/project/tasks/13-pallet-set-history.md` | not started |
 | API routes | none | blocked on the authentication decision |

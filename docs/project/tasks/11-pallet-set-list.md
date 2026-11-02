@@ -1,6 +1,6 @@
 # 11 — List, detail, void, and the voided view
 
-Status: not started. Pallet-intake task 4. Depends on 10. Do not start 12.
+Status: done. Pallet-intake task 4. Depends on 10. Do not start 12.
 
 ## Goal
 
