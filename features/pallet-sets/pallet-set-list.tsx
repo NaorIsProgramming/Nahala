@@ -76,6 +76,7 @@ export async function PalletSetListPage({
 
   return (
     <main className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 overflow-hidden px-4 pb-4">
+      <div className="flex max-h-[40%] min-h-0 shrink-0 flex-col gap-4 overflow-y-auto">
       <BackLink href={voided ? "/app/pallet-sets" : "/app"} label={voided ? "מיון ראשוני" : "נחלה"} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
@@ -108,7 +109,9 @@ export async function PalletSetListPage({
           {page > 1 ? "אין סטים בעמוד זה." : voided ? "אין סטים מבוטלים." : "אין סטים פעילים."}
         </p>
       ) : null}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="min-h-0 flex-1 basis-0 overflow-y-auto">
       {parsed.ok && listed?.ok && sets.length > 0 ? (
         <SelectableSetTable
           sets={sets}
@@ -145,6 +148,7 @@ export async function PalletSetListPage({
       ) : null}
       </div>
       {glance ? (
+        <div className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
         <SetGlance
           setId={glance.id}
           revision={glance.revision}
@@ -155,7 +159,9 @@ export async function PalletSetListPage({
           canVoid={!glance.voided && canWriteSet(actor, glance.growerId, glance.kind)}
           pallets={glance.pallets}
         />
+        </div>
       ) : null}
+      </div>
     </main>
   );
 }
