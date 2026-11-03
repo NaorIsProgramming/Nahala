@@ -86,6 +86,40 @@ export function todayInJerusalem(now: Date = new Date()): string {
   }).format(now);
 }
 
+/** Sunday-first cells for one month. Leading and trailing blanks pad the weeks. */
+export function monthGrid(year: number, month: number): (number | null)[] {
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const dayCount = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const cells: (number | null)[] = Array.from({ length: firstWeekday }, () => null);
+  for (let day = 1; day <= dayCount; day += 1) {
+    cells.push(day);
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push(null);
+  }
+  return cells;
+}
+
+export function shiftMonth(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
+  const index = year * 12 + (month - 1) + delta;
+  const nextYear = Math.floor(index / 12);
+  return { year: nextYear, month: index - nextYear * 12 + 1 };
+}
+
+export function addUtcDays(isoDate: string, days: number): string | null {
+  const parts = calendarParts(isoDate);
+  if (!parts || !Number.isInteger(days)) {
+    return null;
+  }
+  const date = new Date(Date.UTC(Number(parts.year), parts.month - 1, parts.day));
+  date.setUTCDate(date.getUTCDate() + days);
+  return toIso(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
 function calendarParts(
   isoDate: string,
 ): { year: string; month: number; day: number } | null {

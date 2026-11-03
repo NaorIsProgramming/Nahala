@@ -1,7 +1,16 @@
+import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
+
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getSession } from "@/lib/session";
 
-export default function Home() {
+export default async function Home(): Promise<ReactNode> {
+  const session = await getSession();
+  if (session) {
+    redirect("/app");
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <header className="flex p-4">
