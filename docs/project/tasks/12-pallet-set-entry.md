@@ -1,6 +1,6 @@
 # 12 — Entry and edit screen
 
-Status: not started. Pallet-intake task 5. Depends on 11. Do not start 13.
+Status: done. Pallet-intake task 5. Depends on 11. Do not start 13.
 
 ## Goal
 

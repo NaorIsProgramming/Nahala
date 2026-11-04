@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { fieldClassName } from "./classes";
 import { suggestNames, type NamedOption } from "./name-match";
@@ -33,6 +34,10 @@ export function NameSearch({
   errorId,
   disabled = false,
   createHref,
+  onEnter,
+  labelHidden = false,
+  cellKey,
+  portalMenu = false,
 }: {
   id: string;
   name: string;
@@ -46,9 +51,16 @@ export function NameSearch({
   errorId?: string;
   disabled?: boolean;
   createHref?: string;
+  /** Enter confirms the current text, then moves to the next grid cell. */
+  onEnter?: () => void;
+  labelHidden?: boolean;
+  cellKey?: string;
+  portalMenu?: boolean;
 }): ReactNode {
   const router = useRouter();
   const listId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const skipBlurCommit = useRef(false);
   const selected = options.find((option) => option.id === value);
   const [text, setText] = useState(selected?.name ?? "");
   const [open, setOpen] = useState(false);
@@ -64,6 +76,29 @@ export function NameSearch({
   const showCreate =
     createHref !== undefined && text.trim().length > 0 && suggestions.length === 0;
   const activeIndex = suggestions.length === 0 ? -1 : Math.min(highlight, suggestions.length - 1);
+  const [menuBox, setMenuBox] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!portalMenu || !open) {
+      return;
+    }
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+    const anchor: HTMLInputElement = input;
+    function place(): void {
+      const rect = anchor.getBoundingClientRect();
+      setMenuBox({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, portalMenu, text]);
 
   function choose(option: NamedOption): void {
     onChange(option.id);
@@ -121,6 +156,23 @@ export function NameSearch({
       return;
     }
     if (event.key === "Enter") {
+      if (onEnter) {
+        event.preventDefault();
+        const alreadyChosen = selected !== undefined && text === selected.name;
+        if (!alreadyChosen) {
+          if (suggestions.length > 0) {
+            const pick = suggestions[activeIndex] ?? suggestions[0];
+            if (pick) {
+              choose(pick);
+            }
+          } else {
+            commitTyped();
+          }
+        }
+        skipBlurCommit.current = true;
+        onEnter();
+        return;
+      }
       if (!open || suggestions.length === 0) {
         if (open) {
           event.preventDefault();
@@ -139,18 +191,68 @@ export function NameSearch({
     }
   }
 
+  const menu =
+    open && (suggestions.length > 0 || showCreate) ? (
+      <ul
+        id={listId}
+        role="listbox"
+        className={
+          portalMenu
+            ? "overflow-hidden rounded-md border border-border bg-surface"
+            : "absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-border bg-surface"
+        }
+      >
+        {suggestions.map((option, index) => (
+          <li key={option.id}>
+            <button
+              id={`${listId}-${index}`}
+              type="button"
+              role="option"
+              aria-selected={index === activeIndex}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
+              className={`min-h-11 w-full px-3 text-start text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary ${index === activeIndex ? "bg-background" : ""}`}
+            >
+              {option.name}
+            </button>
+          </li>
+        ))}
+        {showCreate ? (
+          <li key={CREATE_ID}>
+            <button
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                openCreate(text.trim());
+              }}
+              className="min-h-11 w-full px-3 text-start text-base text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+            >
+              יצירת {text.trim()}
+            </button>
+          </li>
+        ) : null}
+      </ul>
+    ) : null;
+
   return (
-    <div className="relative flex flex-col gap-2">
-      <label htmlFor={id} className="text-base font-medium text-foreground">
+    <div className={labelHidden ? "relative" : "relative flex flex-col gap-2"}>
+      <label
+        htmlFor={id}
+        className={labelHidden ? "sr-only" : "text-base font-medium text-foreground"}
+      >
         {label}
       </label>
       <input type="hidden" name={name} value={value} />
       <input
+        ref={inputRef}
         id={id}
         value={text}
         required={required}
         disabled={disabled}
         autoComplete="off"
+        data-grid-cell={cellKey}
         role="combobox"
         aria-expanded={open}
         aria-controls={listId}
@@ -164,6 +266,11 @@ export function NameSearch({
           setOpen(true);
         }}
         onBlur={() => {
+          if (skipBlurCommit.current) {
+            skipBlurCommit.current = false;
+            setOpen(false);
+            return;
+          }
           commitTyped();
           setOpen(false);
         }}
@@ -179,45 +286,22 @@ export function NameSearch({
         }}
         className={fieldClassName}
       />
-      {open && (suggestions.length > 0 || showCreate) ? (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-border bg-surface"
-        >
-          {suggestions.map((option, index) => (
-            <li key={option.id}>
-              <button
-                id={`${listId}-${index}`}
-                type="button"
-                role="option"
-                aria-selected={index === activeIndex}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  choose(option);
-                }}
-                className={`min-h-11 w-full px-3 text-start text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary ${index === activeIndex ? "bg-background" : ""}`}
-              >
-                {option.name}
-              </button>
-            </li>
-          ))}
-          {showCreate ? (
-            <li key={CREATE_ID}>
-              <button
-                type="button"
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  openCreate(text.trim());
-                }}
-                className="min-h-11 w-full px-3 text-start text-base text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
-              >
-                יצירת {text.trim()}
-              </button>
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
+      {portalMenu && menu && menuBox
+        ? createPortal(
+            <div
+              className="z-40"
+              style={{
+                position: "fixed",
+                top: menuBox.top,
+                left: menuBox.left,
+                width: menuBox.width,
+              }}
+            >
+              {menu}
+            </div>,
+            document.body,
+          )
+        : menu}
     </div>
   );
 }

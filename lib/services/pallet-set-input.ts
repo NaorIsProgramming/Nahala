@@ -3,10 +3,14 @@ import "server-only";
 import { z } from "zod";
 
 import { PALLET_KINDS, type PalletKind } from "@/lib/access-types";
-import { RECOMMENDED_PACKAGE_AMOUNT_MAX } from "@/lib/reference-limits";
+import {
+  PALLET_GROSS_WEIGHT_MAX_GRAMS,
+  RECOMMENDED_PACKAGE_AMOUNT_MAX,
+} from "@/lib/reference-limits";
 
-const MAX_PALLETS_PER_REQUEST = 500;
-export const PALLET_GROSS_WEIGHT_MAX_GRAMS = 100_000_000;
+export { PALLET_GROSS_WEIGHT_MAX_GRAMS };
+
+export const MAX_PALLETS_PER_REQUEST = 500;
 const POSTGRES_INT_MAX = 2_147_483_647;
 
 export type PalletSetCode =

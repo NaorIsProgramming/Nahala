@@ -20,6 +20,7 @@ export function DateField({
   invalid = false,
   errorId,
   onCommit,
+  onEnter,
 }: {
   id: string;
   name: string;
@@ -30,6 +31,7 @@ export function DateField({
   invalid?: boolean;
   errorId?: string;
   onCommit?: (isoDate: string) => void;
+  onEnter?: () => void;
 }): ReactNode {
   const [text, setText] = useState(defaultIso.length > 0 ? formatFullDate(defaultIso) : "");
   const [iso, setIso] = useState(defaultIso);
@@ -168,6 +170,7 @@ export function DateField({
             if (event.key === "Enter") {
               event.preventDefault();
               commit(text);
+              onEnter?.();
             }
           }}
           className={cn(fieldClassName, "w-48 pe-11 tabular-nums placeholder:text-muted")}

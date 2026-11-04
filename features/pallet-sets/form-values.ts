@@ -1,21 +1,39 @@
-import { isPalletKind } from "@/lib/access-types";
+import { z } from "zod";
+
+import { isPalletKind, type PalletKind } from "@/lib/access-types";
 import { parseKilogramsToGrams } from "@/lib/kilograms";
 import { parseRecommendedPackageAmount } from "@/lib/recommended-package-amount";
 import { PALLET_GROSS_WEIGHT_MAX_GRAMS } from "@/lib/services/pallet-set-input";
 
 import type { PalletSetActionField } from "./action-state";
+import type { SubmittedPallet } from "./grid-diff";
+import { readGridRows } from "./grid-form";
 
 const INVALID_MESSAGE = "הבקשה אינה תקינה";
 const POSTGRES_INT_MAX = 2_147_483_647;
 
-type FormFailure = { ok: false; message: string; field?: PalletSetActionField };
+type FormFailure = {
+  ok: false;
+  message: string;
+  field?: PalletSetActionField;
+  rowIndex?: number;
+};
 
-export type CreateSetFormValue = {
-  kind: string;
+type SetHeaderFields = {
+  kind: PalletKind;
   referenceNumber: number;
   growerId: string;
   receivedOn: string;
-  pallets: [];
+};
+
+export type CreateSetFormValue = SetHeaderFields & {
+  pallets: Omit<SubmittedPallet, "id">[];
+};
+
+export type EditEntryFormValue = SetHeaderFields & {
+  id: string;
+  revision: number;
+  rows: SubmittedPallet[];
 };
 
 export type AddPalletFormValue = {
@@ -47,6 +65,50 @@ export type VoidSetFormValue = {
 export function readCreateSetForm(
   formData: FormData,
 ): { ok: true; value: CreateSetFormValue } | FormFailure {
+  const header = readHeader(formData);
+  if (!header.ok) {
+    return header;
+  }
+  const grid = readGridRows(formData);
+  if (!grid.ok) {
+    return grid;
+  }
+  return {
+    ok: true,
+    value: {
+      ...header.value,
+      pallets: grid.rows.map((row) => ({
+        palletNumber: row.palletNumber,
+        yieldTypeId: row.yieldTypeId,
+        packageTypeId: row.packageTypeId,
+        palletTypeId: row.palletTypeId,
+        packageAmount: row.packageAmount,
+        grossWeightGrams: row.grossWeightGrams,
+      })),
+    },
+  };
+}
+
+export function readEditEntryForm(
+  formData: FormData,
+): { ok: true; value: EditEntryFormValue } | FormFailure {
+  const id = readText(formData, "id");
+  const revision = readRevision(formData);
+  if (!z.uuid().safeParse(id).success || revision === null) {
+    return { ok: false, message: INVALID_MESSAGE };
+  }
+  const header = readHeader(formData);
+  if (!header.ok) {
+    return header;
+  }
+  const grid = readGridRows(formData);
+  if (!grid.ok) {
+    return grid;
+  }
+  return { ok: true, value: { id, revision, ...header.value, rows: grid.rows } };
+}
+
+function readHeader(formData: FormData): { ok: true; value: SetHeaderFields } | FormFailure {
   const kind = readText(formData, "kind");
   if (!isPalletKind(kind)) {
     return { ok: false, message: "יש לבחור סוג", field: "kind" };
@@ -67,16 +129,7 @@ export function readCreateSetForm(
     return { ok: false, message: "התאריך אינו תקין", field: "receivedOn" };
   }
 
-  return {
-    ok: true,
-    value: {
-      kind,
-      referenceNumber,
-      growerId,
-      receivedOn,
-      pallets: [],
-    },
-  };
+  return { ok: true, value: { kind, referenceNumber, growerId, receivedOn } };
 }
 
 export function readAddPalletForm(

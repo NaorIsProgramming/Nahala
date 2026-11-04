@@ -20,7 +20,8 @@ import {
   type PalletSetResult,
 } from "@/lib/services/pallet-set-input";
 
-import { idlePalletSetActionState, type PalletSetActionState } from "./action-state";
+import { palletSetActionFailure } from "./action-result";
+import type { PalletSetActionState } from "./action-state";
 import {
   readAddPalletForm,
   readCreateSetForm,
@@ -32,10 +33,7 @@ const SIGN_IN_MESSAGE = "יש להתחבר מחדש";
 const SAVE_FAILED_MESSAGE = "לא הצלחנו לשמור. נסו שוב.";
 
 function failureState(result: PalletSetResult<unknown>): PalletSetActionState {
-  if (result.ok) {
-    return idlePalletSetActionState;
-  }
-  return { status: "error", message: result.message };
+  return palletSetActionFailure(result);
 }
 
 function refreshSet(id: string): void {

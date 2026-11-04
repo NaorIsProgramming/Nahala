@@ -8,12 +8,18 @@ export type PalletSetActionField =
   | "packageTypeId"
   | "palletTypeId"
   | "packageAmount"
-  | "grossWeightKilograms";
+  | "grossWeightKilograms"
+  | "revision";
 
 export type PalletSetActionState = {
   status: "idle" | "success" | "error";
   message?: string;
   field?: PalletSetActionField;
+  /** Index of the submitted grid row, when the error belongs to one pallet. */
+  rowIndex?: number;
+  palletNumbers?: number[];
+  /** Revision after a header save whose pallet save then failed. */
+  revision?: number;
 };
 
 export const idlePalletSetActionState: PalletSetActionState = { status: "idle" };

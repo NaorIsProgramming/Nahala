@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 
 import { BackLink } from "@/components/ui/back-link";
 import { canWriteReference, getActor } from "@/lib/access";
-import { listCommonNameIds, listSetGrowers } from "@/lib/services/pallet-sets";
 
 import { todayInJerusalem } from "./dates";
-import { NewSetForm } from "./new-set-form";
+import { loadEntryCatalog } from "./entry-catalog";
+import { PalletEntryForm } from "./pallet-entry-form";
 import { PalletSetMessage } from "./screen-message";
 import { canWriteAnySet } from "./visibility";
 
@@ -32,21 +32,18 @@ export async function NewPalletSetPage({
     );
   }
 
-  const [growers, commonNames] = await Promise.all([
-    listSetGrowers(actor),
-    listCommonNameIds(actor),
-  ]);
-  if (!growers.ok) {
+  const loaded = await loadEntryCatalog(actor);
+  if (loaded.status === "unavailable") {
     return (
       <PalletSetMessage
         title="סט חדש"
-        message={growers.message}
+        message={loaded.message}
         backHref="/app/pallet-sets"
         backLabel="מיון ראשוני"
       />
     );
   }
-  if (growers.data.length === 0) {
+  if (loaded.status === "no-growers") {
     return (
       <PalletSetMessage
         title="סט חדש"
@@ -57,16 +54,32 @@ export async function NewPalletSetPage({
     );
   }
 
+  const { catalog } = loaded;
+  const canAddRows =
+    catalog.yieldTypes.length > 0 &&
+    catalog.packageTypes.length > 0 &&
+    catalog.palletTypes.length > 0;
+
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 pb-16">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-16">
       <BackLink href="/app/pallet-sets" label="מיון ראשוני" />
       <h1 className="text-3xl font-semibold tracking-tight">סט חדש</h1>
-      <p className="text-base leading-normal text-muted">אפשר לשמור בלי משטחים, ולהוסיף משטח אחר כך.</p>
-      <NewSetForm
-        growers={growers.data}
-        commonGrowerIds={commonNames.growers}
-        defaultDate={todayInJerusalem()}
+      <p className="text-base leading-normal text-muted">
+        אפשר לשמור בלי משטחים, או למלא שורות ולשמור פעם אחת.
+      </p>
+      <PalletEntryForm
+        mode="create"
+        growers={catalog.growers}
+        commonGrowerIds={catalog.commonGrowerIds}
         canCreateGrower={canWriteReference(actor, "growers")}
+        yieldTypes={catalog.yieldTypes}
+        packageTypes={catalog.packageTypes}
+        palletTypes={catalog.palletTypes}
+        commonYieldIds={catalog.commonYieldIds}
+        commonPackageIds={catalog.commonPackageIds}
+        commonPalletTypeIds={catalog.commonPalletTypeIds}
+        canAddRows={canAddRows}
+        defaultDate={todayInJerusalem()}
         createdField={createdField}
         createdId={createdId}
       />

@@ -12,6 +12,7 @@ import { listActiveReference } from "@/lib/services/reference-data";
 import { getPalletSet, listCommonNameIds, listSetGrowers } from "@/lib/services/pallet-sets";
 
 import { AddPalletForm } from "./add-pallet-form";
+import { secondaryButtonClassName } from "./classes";
 import { formatFullDate } from "./dates";
 import { PalletTable } from "./pallet-table";
 import { PalletSetMessage } from "./screen-message";
@@ -104,7 +105,14 @@ export async function PalletSetDetailPage({
           </>
         )}
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">משטחים</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">משטחים</h2>
+        {canChange ? (
+          <Link href={`/app/pallet-sets/${set.id}/edit`} className={secondaryButtonClassName}>
+            עריכת משטחים
+          </Link>
+        ) : null}
+      </div>
       <PalletTable
         pallets={set.pallets}
         setId={set.id}

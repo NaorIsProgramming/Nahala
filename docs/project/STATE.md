@@ -32,7 +32,8 @@ Users and roles: pallet intake uses `access_grants` (global read or write, growe
 - Pallet intake task 1 is built: growers, yield types, package types, and pallet types, plus `access_grants`. Migrations `0001_nosy_the_call.sql` and `0002_flat_bloodstorm.sql` are applied locally. Package tare, net weight, and the recommended package count are optional.
 - Pallet intake task 2 is built: `pallet_sets`, `pallets`, `audit_events`, and `audit_subjects`. Migration `0003_pallet_sets.sql` is applied locally.
 - Pallet intake task 3 is built: set services, `scopeForSets`, audit writes, and the voided tare update.
-- Pallet intake task 4 is built: מיון ראשוני list with a bottom pallet glimpse, detail, one-pallet add and remove, void, the voided list, a header-only new set, and a kind change. Name fields are a five-result search. The app header has home and the screens the user can open. The grid is brief 12. `/api/v1` still waits on an API-key decision.
+- Pallet intake task 4 is built: מיון ראשוני list with a bottom pallet glimpse, detail, one-pallet add and remove, void, the voided list, a header-only new set, and a kind change. Name fields are a five-result search. The app header has home and the screens the user can open. `/api/v1` still waits on an API-key decision.
+- Pallet intake task 5 is built: `/app/pallet-sets/new` and `/app/pallet-sets/[id]/edit` share a keyboard grid. One submit creates the set with its rows, or updates the header when it changed and sends one add/update/remove call for the rows that changed. The live preview uses the tares loaded with the form and does not clamp. Detail links to edit. There is no home tile for edit.
 
 ## Architecture map
 
@@ -59,7 +60,7 @@ What exists now:
 - `lib/kilograms.ts` : kilogram text to integer grams, no `server-only` import
 - `components/ui/launcher-tile.tsx` : the shared launcher tile
 - `app/app/page.tsx` : launcher. Tiles are טבלאות and, when the actor can read sets, מיון ראשוני.
-- `app/app/pallet-sets/` : active list with `selected` glimpse, voided list, new header, and detail. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services. `components/app-nav.tsx` is the header menu.
+- `app/app/pallet-sets/` : active list with `selected` glimpse, voided list, new set with the grid, detail, and `[id]/edit`. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services. `components/app-nav.tsx` is the header menu.
 - `app/app/tables/page.tsx` and the four table screens under `app/app/`. Each table is a condensed list; details and editing open for the selected row.
 - `db/migrations/0000_auth.sql` : the applied auth migration. Ids are `text`. Timestamps are `timestamp` without time zone.
 - `lib/auth.ts` : server-only Better Auth instance. Public sign-up disabled unless this process sets `BOOTSTRAP_SIGN_UP=1` outside production. `nextCookies()` is the only plugin.
@@ -104,6 +105,7 @@ What exists now:
 - 2026-11-02 Set visibility is `scopeForSets` in the query. A hidden set and a missing id both return `NOT_FOUND`. A tare edit rewrites voided pallets in one statement and leaves active pallets until the next save.
 - 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. Kind labels are כניסה למיון ראשוני, כניסה למיון סופי, and העברה למיון סופי. A kind, grower, or date change saves on commit. Creating a missing name returns only to an `/app/pallet-sets` path. Dark-mode `danger` is `#D46E66`.
 - 2026-11-03 A signed-in request for `/` redirects to `/app`. The public home reads the session, so that route is dynamic.
+- 2026-11-03 The entry grid previews with the tares loaded on the form and saves through `createPalletSet` or one `changePallets` call. The client does not send net weight or tare. A header change and a pallet change are two service calls; the header runs first, and a failed pallet save returns the new revision.
 
 ## Conventions not obvious from the code
 
@@ -134,7 +136,7 @@ From the 2026-10-28 foundation audit. Not changed by the fixes applied that day:
 
 ## Next up
 
-1. Pallet-set entry grid, starting at `docs/project/tasks/12-pallet-set-entry.md`.
+1. Pallet-set history, `docs/project/tasks/13-pallet-set-history.md`. Do not start it until asked.
 2. API-key decision before any `/api/v1` route.
 3. Deployment plan for the deferred items above.
 
