@@ -36,6 +36,7 @@ export function NameSearch({
   createHref,
   onEnter,
   onVerticalArrow,
+  onHorizontalArrow,
   labelHidden = false,
   cellKey,
   portalMenu = false,
@@ -60,6 +61,8 @@ export function NameSearch({
   onEnter?: () => void;
   /** Moves to another row when the suggestion list is not being typed into. */
   onVerticalArrow?: (down: boolean, shift: boolean) => void;
+  /** Control plus left or right leaves the field. `left` is the physical left arrow. */
+  onHorizontalArrow?: (left: boolean) => void;
   labelHidden?: boolean;
   cellKey?: string;
   portalMenu?: boolean;
@@ -153,8 +156,7 @@ export function NameSearch({
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       const down = event.key === "ArrowDown";
-      const typing = text.trim().length > 0 && (selected === undefined || text !== selected.name);
-      if (open && typing && suggestions.length > 0) {
+      if (open && suggestions.length > 0 && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
         setHighlight((current) =>
           down ? Math.min(suggestions.length - 1, current + 1) : Math.max(0, current - 1),
@@ -172,6 +174,16 @@ export function NameSearch({
       setHighlight((current) =>
         down ? Math.min(suggestions.length - 1, current + 1) : Math.max(0, current - 1),
       );
+      return;
+    }
+    if (
+      (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+      (event.ctrlKey || event.metaKey) &&
+      onHorizontalArrow
+    ) {
+      event.preventDefault();
+      setOpen(false);
+      onHorizontalArrow(event.key === "ArrowLeft");
       return;
     }
     if (event.key === "Enter") {

@@ -44,6 +44,7 @@ export function PalletGridRow({
   onRowPointerUp,
   onRemoveSelected,
   onVertical,
+  onHorizontal,
   onMove,
   onChange,
   onPackageChange,
@@ -69,6 +70,7 @@ export function PalletGridRow({
   onRowPointerUp: () => void;
   onRemoveSelected: () => void;
   onVertical: (column: number, down: boolean, shift: boolean) => void;
+  onHorizontal: (column: number, left: boolean) => void;
   onMove: (row: number, column: number) => void;
   onChange: (patch: Partial<GridRow>) => void;
   onPackageChange: (packageTypeId: string) => void;
@@ -111,9 +113,17 @@ export function PalletGridRow({
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               event.preventDefault();
               onVertical(-1, event.key === "ArrowDown", event.shiftKey);
+              return;
+            }
+            if (
+              (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+              (event.ctrlKey || event.metaKey)
+            ) {
+              event.preventDefault();
+              onHorizontal(-1, event.key === "ArrowLeft");
             }
           }}
-          className="w-full cursor-ns-resize select-none text-base tabular-nums text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          className="w-full cursor-default select-none text-base tabular-nums text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           {index + 1}
         </button>
@@ -139,6 +149,9 @@ export function PalletGridRow({
           onVertical={(down, shift) => {
             onVertical(0, down, shift);
           }}
+          onHorizontal={(left) => {
+            onHorizontal(0, left);
+          }}
         />
       </td>
       <td className={cellClassName}>
@@ -162,6 +175,9 @@ export function PalletGridRow({
           onVertical={(down, shift) => {
             onVertical(1, down, shift);
           }}
+          onHorizontal={(left) => {
+            onHorizontal(1, left);
+          }}
         />
       </td>
       <td className={cellClassName}>
@@ -182,6 +198,9 @@ export function PalletGridRow({
           }}
           onVertical={(down, shift) => {
             onVertical(2, down, shift);
+          }}
+          onHorizontal={(left) => {
+            onHorizontal(2, left);
           }}
         />
       </td>
@@ -205,6 +224,9 @@ export function PalletGridRow({
           }}
           onVertical={(down, shift) => {
             onVertical(3, down, shift);
+          }}
+          onHorizontal={(left) => {
+            onHorizontal(3, left);
           }}
         />
       </td>
@@ -233,6 +255,9 @@ export function PalletGridRow({
           onVertical={(down, shift) => {
             onVertical(4, down, shift);
           }}
+          onHorizontal={(left) => {
+            onHorizontal(4, left);
+          }}
         />
       </td>
       <td className={numberCellClassName}>
@@ -260,6 +285,9 @@ export function PalletGridRow({
           onVertical={(down, shift) => {
             onVertical(5, down, shift);
           }}
+          onHorizontal={(left) => {
+            onHorizontal(5, left);
+          }}
         />
       </td>
       <td className={numberCellClassName}>
@@ -283,6 +311,7 @@ function TypeCell({
   onChange,
   onEnter,
   onVertical,
+  onHorizontal,
 }: {
   id: string;
   name: string;
@@ -297,6 +326,7 @@ function TypeCell({
   onChange: (value: string) => void;
   onEnter: () => void;
   onVertical: (down: boolean, shift: boolean) => void;
+  onHorizontal: (left: boolean) => void;
 }): ReactNode {
   return (
     <NameSearch
@@ -317,6 +347,7 @@ function TypeCell({
       onChange={onChange}
       onEnter={onEnter}
       onVerticalArrow={onVertical}
+      onHorizontalArrow={onHorizontal}
     />
   );
 }
@@ -334,6 +365,7 @@ function GridNumber({
   onChange,
   onEnter,
   onVertical,
+  onHorizontal,
 }: {
   id: string;
   name: string;
@@ -347,6 +379,7 @@ function GridNumber({
   onChange: (value: string) => void;
   onEnter: () => void;
   onVertical: (down: boolean, shift: boolean) => void;
+  onHorizontal: (left: boolean) => void;
 }): ReactNode {
   return (
     <>
@@ -377,6 +410,14 @@ function GridNumber({
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault();
             onVertical(event.key === "ArrowDown", event.shiftKey);
+            return;
+          }
+          if (
+            (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+            (event.ctrlKey || event.metaKey)
+          ) {
+            event.preventDefault();
+            onHorizontal(event.key === "ArrowLeft");
           }
         }}
         className={cn(gridFieldClassName, "px-1 text-center tabular-nums")}

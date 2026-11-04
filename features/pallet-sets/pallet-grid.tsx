@@ -123,6 +123,24 @@ export function PalletGrid({
     focusCell(next, column);
   }
 
+  function moveHorizontal(row: number, column: number, left: boolean): void {
+    if (column < 0) {
+      if (left) {
+        focusCell(row, 0);
+      }
+      return;
+    }
+    const next = left ? column + 1 : column - 1;
+    if (next < 0) {
+      document.querySelector<HTMLElement>(`[data-row-gutter="${row}"]`)?.focus();
+      return;
+    }
+    if (next >= COLUMN_COUNT) {
+      return;
+    }
+    focusCell(row, next);
+  }
+
   function selectRange(anchor: number, index: number): void {
     setConfirmingRemove(false);
     const start = Math.min(anchor, index);
@@ -311,8 +329,8 @@ export function PalletGrid({
                       ),
                     );
                   }}
-                  onRemove={() => {
-                    onRowsChange(rows.filter((_, rowIndex) => rowIndex !== index));
+                  onHorizontal={(column, left) => {
+                    moveHorizontal(index, column, left);
                   }}
                 />
               ))}
@@ -320,6 +338,13 @@ export function PalletGrid({
           </table>
         </div>
       )}
+      {selectedIndexes !== null && selectedIndexes.length === 1 ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className={secondaryButtonClassName} onClick={copyOneSelected}>
+            העתקת משטח
+          </button>
+        </div>
+      ) : null}
       {selectedIndexes !== null && selectedIndexes.length > 1 ? (
         <div
           className="flex flex-wrap items-center gap-3"
@@ -355,9 +380,6 @@ export function PalletGrid({
               <p className="text-base leading-normal text-muted">
                 {selectedIndexes.length} משטחים נבחרו
               </p>
-              <button type="button" className={secondaryButtonClassName} onClick={copyOneSelected}>
-                העתקת משטח
-              </button>
               <button
                 type="button"
                 className={compactDangerButtonClassName}
