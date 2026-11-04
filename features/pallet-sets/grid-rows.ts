@@ -72,6 +72,14 @@ export function rowCopiedFrom(previous: GridRow, key: string): GridRow {
   };
 }
 
+/** One new pallet with the same values, except a new id and an empty pallet number. */
+export function duplicateGridRow(source: GridRow, key: string): GridRow {
+  return {
+    ...rowCopiedFrom(source, key),
+    grossWeightKilograms: source.grossWeightKilograms,
+  };
+}
+
 /**
  * A recommendation replaces the amount. No recommendation leaves the current amount,
  * including an amount the operator already changed.

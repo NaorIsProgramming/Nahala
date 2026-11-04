@@ -99,7 +99,7 @@ export async function EditPalletSetPage({
     catalog.palletTypes.length > 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-[96rem] flex-1 flex-col gap-6 px-4 pb-16">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-16">
       <BackLink href={backHref} label="הסט" />
       <h1 className="text-3xl font-semibold tracking-tight">
         עריכת אסמכתא{" "}

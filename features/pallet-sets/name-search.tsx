@@ -35,6 +35,7 @@ export function NameSearch({
   disabled = false,
   createHref,
   onEnter,
+  onVerticalArrow,
   labelHidden = false,
   cellKey,
   portalMenu = false,
@@ -57,6 +58,8 @@ export function NameSearch({
    * Enter to choose the highlighted name and does not call this.
    */
   onEnter?: () => void;
+  /** Moves to another row when the suggestion list is not being typed into. */
+  onVerticalArrow?: (down: boolean, shift: boolean) => void;
   labelHidden?: boolean;
   cellKey?: string;
   portalMenu?: boolean;
@@ -148,16 +151,27 @@ export function NameSearch({
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
-    if (event.key === "ArrowDown") {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const down = event.key === "ArrowDown";
+      const typing = text.trim().length > 0 && (selected === undefined || text !== selected.name);
+      if (open && typing && suggestions.length > 0) {
+        event.preventDefault();
+        setHighlight((current) =>
+          down ? Math.min(suggestions.length - 1, current + 1) : Math.max(0, current - 1),
+        );
+        return;
+      }
+      if (onVerticalArrow) {
+        event.preventDefault();
+        setOpen(false);
+        onVerticalArrow(down, event.shiftKey);
+        return;
+      }
       event.preventDefault();
       setOpen(true);
-      setHighlight((current) => Math.min(suggestions.length - 1, current + 1));
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setOpen(true);
-      setHighlight((current) => Math.max(0, current - 1));
+      setHighlight((current) =>
+        down ? Math.min(suggestions.length - 1, current + 1) : Math.max(0, current - 1),
+      );
       return;
     }
     if (event.key === "Enter") {

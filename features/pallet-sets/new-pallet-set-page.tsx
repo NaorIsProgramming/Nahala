@@ -61,7 +61,7 @@ export async function NewPalletSetPage({
     catalog.palletTypes.length > 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-[96rem] flex-1 flex-col gap-6 px-4 pb-16">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-16">
       <BackLink href="/app/pallet-sets" label="מיון ראשוני" />
       <h1 className="text-3xl font-semibold tracking-tight">סט חדש</h1>
       <p className="text-base leading-normal text-muted">

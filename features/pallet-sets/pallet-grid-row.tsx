@@ -1,13 +1,13 @@
 "use client";
 
 import { CircleAlert } from "lucide-react";
-import type { ReactNode } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 
 import { formatGramsAsKilograms } from "@/lib/kilograms";
 import { cn } from "@/lib/utils";
 
 import type { PalletSetActionField } from "./action-state";
-import { gridFieldClassName, secondaryButtonClassName } from "./classes";
+import { gridFieldClassName } from "./classes";
 import {
   gridFieldName,
   previewNetGrams,
@@ -17,8 +17,8 @@ import {
 } from "./grid-rows";
 import { NameSearch } from "./name-search";
 
-const cellClassName = "border-b border-input/40 px-2 py-2 align-middle";
-const numberCellClassName = "border-b border-input/40 px-1 py-2 text-center align-middle";
+const cellClassName = "border-s border-b border-input/40 px-2 py-1 align-middle";
+const numberCellClassName = "border-s border-b border-input/40 px-1 py-1 text-center align-middle";
 
 type NamedChoice = { id: string; name: string };
 
@@ -37,10 +37,16 @@ export function PalletGridRow({
   errorField,
   errorRow,
   palletNumbers,
+  highlighted,
+  onFieldFocus,
+  onRowPointerDown,
+  onRowPointerMove,
+  onRowPointerUp,
+  onRemoveSelected,
+  onVertical,
   onMove,
   onChange,
   onPackageChange,
-  onRemove,
 }: {
   row: GridRow;
   index: number;
@@ -56,10 +62,16 @@ export function PalletGridRow({
   errorField?: PalletSetActionField;
   errorRow?: number;
   palletNumbers?: number[];
+  highlighted: boolean;
+  onFieldFocus: () => void;
+  onRowPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  onRowPointerMove: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  onRowPointerUp: () => void;
+  onRemoveSelected: () => void;
+  onVertical: (column: number, down: boolean, shift: boolean) => void;
   onMove: (row: number, column: number) => void;
   onChange: (patch: Partial<GridRow>) => void;
   onPackageChange: (packageTypeId: string) => void;
-  onRemove: () => void;
 }): ReactNode {
   const grams = previewNetGrams(row, packageTypes, palletTypes);
   const negative = grams !== null && grams < 0;
@@ -70,7 +82,42 @@ export function PalletGridRow({
       palletNumbers.includes(Number(row.palletNumber)));
 
   return (
-    <tr>
+    <tr
+      data-pallet-row={index}
+      onFocusCapture={(event) => {
+        const target = event.target;
+        if (target instanceof Element && target.closest("[data-row-gutter]") !== null) {
+          return;
+        }
+        onFieldFocus();
+      }}
+      className={highlighted ? "bg-background" : undefined}
+    >
+      <td className="border-b border-input/40 px-1 py-1 text-center align-middle">
+        <button
+          type="button"
+          data-row-gutter={index}
+          aria-label={`שורה ${index + 1}`}
+          disabled={pending}
+          onPointerDown={onRowPointerDown}
+          onPointerMove={onRowPointerMove}
+          onPointerUp={onRowPointerUp}
+          onKeyDown={(event) => {
+            if (event.key === "Delete" || event.key === "Backspace") {
+              event.preventDefault();
+              onRemoveSelected();
+              return;
+            }
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              event.preventDefault();
+              onVertical(-1, event.key === "ArrowDown", event.shiftKey);
+            }
+          }}
+          className="w-full cursor-ns-resize select-none text-base tabular-nums text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+        >
+          {index + 1}
+        </button>
+      </td>
       <td className={numberCellClassName}>
         <input type="hidden" name={gridFieldName(index, "id")} value={row.id ?? ""} />
         <GridNumber
@@ -88,6 +135,9 @@ export function PalletGridRow({
           }}
           onEnter={() => {
             onMove(index, 0);
+          }}
+          onVertical={(down, shift) => {
+            onVertical(0, down, shift);
           }}
         />
       </td>
@@ -109,6 +159,9 @@ export function PalletGridRow({
           onEnter={() => {
             onMove(index, 1);
           }}
+          onVertical={(down, shift) => {
+            onVertical(1, down, shift);
+          }}
         />
       </td>
       <td className={cellClassName}>
@@ -126,6 +179,9 @@ export function PalletGridRow({
           onChange={onPackageChange}
           onEnter={() => {
             onMove(index, 2);
+          }}
+          onVertical={(down, shift) => {
+            onVertical(2, down, shift);
           }}
         />
       </td>
@@ -146,6 +202,9 @@ export function PalletGridRow({
           }}
           onEnter={() => {
             onMove(index, 3);
+          }}
+          onVertical={(down, shift) => {
+            onVertical(3, down, shift);
           }}
         />
       </td>
@@ -171,6 +230,9 @@ export function PalletGridRow({
           onEnter={() => {
             onMove(index, 4);
           }}
+          onVertical={(down, shift) => {
+            onVertical(4, down, shift);
+          }}
         />
       </td>
       <td className={numberCellClassName}>
@@ -195,25 +257,13 @@ export function PalletGridRow({
           onEnter={() => {
             onMove(index, 5);
           }}
+          onVertical={(down, shift) => {
+            onVertical(5, down, shift);
+          }}
         />
       </td>
       <td className={numberCellClassName}>
         <NetPreview grams={grams} negative={negative} />
-      </td>
-      <td className={cellClassName}>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onRemove}
-          className={secondaryButtonClassName}
-          aria-label={
-            row.palletNumber.length > 0
-              ? `הסרת משטח ${row.palletNumber}`
-              : `הסרת שורה ${index + 1}`
-          }
-        >
-          הסרה
-        </button>
       </td>
     </tr>
   );
@@ -232,6 +282,7 @@ function TypeCell({
   disabled,
   onChange,
   onEnter,
+  onVertical,
 }: {
   id: string;
   name: string;
@@ -245,6 +296,7 @@ function TypeCell({
   disabled: boolean;
   onChange: (value: string) => void;
   onEnter: () => void;
+  onVertical: (down: boolean, shift: boolean) => void;
 }): ReactNode {
   return (
     <NameSearch
@@ -264,6 +316,7 @@ function TypeCell({
       inputClassName={gridFieldClassName}
       onChange={onChange}
       onEnter={onEnter}
+      onVerticalArrow={onVertical}
     />
   );
 }
@@ -280,6 +333,7 @@ function GridNumber({
   decimal,
   onChange,
   onEnter,
+  onVertical,
 }: {
   id: string;
   name: string;
@@ -292,6 +346,7 @@ function GridNumber({
   decimal: boolean;
   onChange: (value: string) => void;
   onEnter: () => void;
+  onVertical: (down: boolean, shift: boolean) => void;
 }): ReactNode {
   return (
     <>
@@ -317,6 +372,11 @@ function GridNumber({
           if (event.key === "Enter") {
             event.preventDefault();
             onEnter();
+            return;
+          }
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            onVertical(event.key === "ArrowDown", event.shiftKey);
           }
         }}
         className={cn(gridFieldClassName, "px-1 text-center tabular-nums")}
