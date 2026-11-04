@@ -38,6 +38,7 @@ export function NameSearch({
   labelHidden = false,
   cellKey,
   portalMenu = false,
+  inputClassName,
 }: {
   id: string;
   name: string;
@@ -51,11 +52,15 @@ export function NameSearch({
   errorId?: string;
   disabled?: boolean;
   createHref?: string;
-  /** Enter confirms the current text, then moves to the next grid cell. */
+  /**
+   * Called when Enter should leave the field. An open suggestion list consumes
+   * Enter to choose the highlighted name and does not call this.
+   */
   onEnter?: () => void;
   labelHidden?: boolean;
   cellKey?: string;
   portalMenu?: boolean;
+  inputClassName?: string;
 }): ReactNode {
   const router = useRouter();
   const listId = useId();
@@ -158,16 +163,17 @@ export function NameSearch({
     if (event.key === "Enter") {
       if (onEnter) {
         event.preventDefault();
-        const alreadyChosen = selected !== undefined && text === selected.name;
-        if (!alreadyChosen) {
-          if (suggestions.length > 0) {
-            const pick = suggestions[activeIndex] ?? suggestions[0];
-            if (pick) {
-              choose(pick);
-            }
+        if (open && suggestions.length > 0) {
+          const pick = suggestions[activeIndex] ?? suggestions[0];
+          if (pick && pick.id !== value) {
+            choose(pick);
           } else {
-            commitTyped();
+            setOpen(false);
           }
+          return;
+        }
+        if (selected === undefined || text !== selected.name) {
+          commitTyped();
         }
         skipBlurCommit.current = true;
         onEnter();
@@ -284,7 +290,7 @@ export function NameSearch({
             onChange("");
           }
         }}
-        className={fieldClassName}
+        className={inputClassName ?? fieldClassName}
       />
       {portalMenu && menu && menuBox
         ? createPortal(

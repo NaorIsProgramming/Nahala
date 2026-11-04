@@ -4,9 +4,10 @@ import { CircleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { formatGramsAsKilograms } from "@/lib/kilograms";
+import { cn } from "@/lib/utils";
 
 import type { PalletSetActionField } from "./action-state";
-import { fieldClassName, secondaryButtonClassName } from "./classes";
+import { gridFieldClassName, secondaryButtonClassName } from "./classes";
 import {
   gridFieldName,
   previewNetGrams,
@@ -259,6 +260,7 @@ function TypeCell({
       invalid={invalid}
       errorId={errorId}
       disabled={disabled}
+      inputClassName={gridFieldClassName}
       onChange={onChange}
       onEnter={onEnter}
     />
@@ -316,7 +318,7 @@ function GridNumber({
             onEnter();
           }
         }}
-        className={`${fieldClassName} tabular-nums`}
+        className={cn(gridFieldClassName, "tabular-nums")}
       />
     </>
   );
