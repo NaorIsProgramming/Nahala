@@ -19,7 +19,9 @@ import { PalletGridRow } from "./pallet-grid-row";
 const COLUMN_COUNT = 6;
 
 const headerClassName =
-  "sticky top-0 z-10 border-b border-border bg-surface px-2 py-2 text-start text-base font-medium text-foreground";
+  "sticky top-0 z-10 border-b border-input/40 bg-surface px-2 py-2 text-base font-medium text-foreground";
+const textHeaderClassName = `${headerClassName} text-start`;
+const numberHeaderClassName = `${headerClassName} text-center`;
 
 type NamedChoice = { id: string; name: string };
 
@@ -92,17 +94,27 @@ export function PalletGrid({
       {rows.length === 0 ? (
         <p className="text-base leading-normal text-muted">אין שורות בטבלה.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table className="w-full min-w-[72rem] border-collapse text-base">
+        <div className="rounded-lg border border-border bg-surface">
+          <table className="w-full table-fixed border-collapse text-base">
+            <colgroup>
+              <col className="w-28" />
+              <col />
+              <col />
+              <col />
+              <col className="w-20" />
+              <col className="w-24" />
+              <col className="w-20" />
+              <col className="w-16" />
+            </colgroup>
             <thead>
               <tr>
-                <th scope="col" className={headerClassName}>מספר</th>
-                <th scope="col" className={headerClassName}>יבול</th>
-                <th scope="col" className={headerClassName}>אריזה</th>
-                <th scope="col" className={headerClassName}>סוג משטח</th>
-                <th scope="col" className={headerClassName}>כמות</th>
-                <th scope="col" className={headerClassName}>ברוטו (ק״ג)</th>
-                <th scope="col" className={headerClassName}>נטו (ק״ג)</th>
+                <th scope="col" className={numberHeaderClassName}>מספר</th>
+                <th scope="col" className={textHeaderClassName}>יבול</th>
+                <th scope="col" className={textHeaderClassName}>אריזה</th>
+                <th scope="col" className={textHeaderClassName}>סוג משטח</th>
+                <th scope="col" className={numberHeaderClassName}>כמות</th>
+                <th scope="col" className={numberHeaderClassName}>ברוטו (ק״ג)</th>
+                <th scope="col" className={numberHeaderClassName}>נטו (ק״ג)</th>
                 <th scope="col" className={headerClassName}>
                   <span className="sr-only">הסרה</span>
                 </th>

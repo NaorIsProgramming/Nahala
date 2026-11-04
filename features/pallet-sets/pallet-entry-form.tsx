@@ -137,7 +137,7 @@ export function PalletEntryForm(props: Props): ReactNode {
           <input type="hidden" name="revision" value={revision} />
         </>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
         <NameSearch
           id="entry-kind"
           name="kind"

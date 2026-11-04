@@ -17,7 +17,8 @@ import {
 } from "./grid-rows";
 import { NameSearch } from "./name-search";
 
-const cellClassName = "border-b border-border px-2 py-2 align-top";
+const cellClassName = "border-b border-input/40 px-2 py-2 align-middle";
+const numberCellClassName = "border-b border-input/40 px-1 py-2 text-center align-middle";
 
 type NamedChoice = { id: string; name: string };
 
@@ -70,7 +71,7 @@ export function PalletGridRow({
 
   return (
     <tr>
-      <td className={cellClassName}>
+      <td className={numberCellClassName}>
         <input type="hidden" name={gridFieldName(index, "id")} value={row.id ?? ""} />
         <GridNumber
           id={`row-${index}-number`}
@@ -148,7 +149,7 @@ export function PalletGridRow({
           }}
         />
       </td>
-      <td className={cellClassName}>
+      <td className={numberCellClassName}>
         <GridNumber
           id={`row-${index}-amount`}
           name={gridFieldName(index, "packageAmount")}
@@ -172,7 +173,7 @@ export function PalletGridRow({
           }}
         />
       </td>
-      <td className={cellClassName}>
+      <td className={numberCellClassName}>
         <GridNumber
           id={`row-${index}-gross`}
           name={gridFieldName(index, "grossWeightKilograms")}
@@ -196,7 +197,7 @@ export function PalletGridRow({
           }}
         />
       </td>
-      <td className={cellClassName}>
+      <td className={numberCellClassName}>
         <NetPreview grams={grams} negative={negative} />
       </td>
       <td className={cellClassName}>
@@ -318,7 +319,7 @@ function GridNumber({
             onEnter();
           }
         }}
-        className={cn(gridFieldClassName, "tabular-nums")}
+        className={cn(gridFieldClassName, "px-1 text-center tabular-nums")}
       />
     </>
   );
@@ -329,7 +330,7 @@ function NetPreview({ grams, negative }: { grams: number | null; negative: boole
     return <span className="text-muted">—</span>;
   }
   return (
-    <span className={`inline-flex items-center gap-1 ${negative ? "text-danger" : "text-foreground"}`}>
+    <span className={`inline-flex w-full items-center justify-center gap-1 ${negative ? "text-danger" : "text-foreground"}`}>
       {negative ? <CircleAlert aria-hidden="true" className="size-5 shrink-0" strokeWidth={2} /> : null}
       <bdi dir="ltr" className="tabular-nums">
         {formatGramsAsKilograms(grams)}
