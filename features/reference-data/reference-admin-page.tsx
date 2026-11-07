@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { BackLink } from "@/components/ui/back-link";
+import type { AuditSubjectType } from "@/db/schema/audit";
 import { canWriteReference, getActor } from "@/lib/access";
 import type { ReferenceTable } from "@/lib/access-types";
 import { formatGramsAsKilograms } from "@/lib/kilograms";
@@ -70,10 +71,18 @@ export async function ReferenceAdminPage({
         prefillName={prefillName}
         returnTo={safeReturn ?? undefined}
         createdField={createdField}
+        historySubjectType={AUDIT_SUBJECT_BY_TABLE[table]}
       />
     </main>
   );
 }
+
+const AUDIT_SUBJECT_BY_TABLE = {
+  growers: "grower",
+  yield_types: "yield_type",
+  package_types: "package_type",
+  pallet_types: "pallet_type",
+} as const satisfies Record<ReferenceTable, AuditSubjectType>;
 
 function AccessDenied(): ReactNode {
   return (

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { HistoryPanel } from "@/features/audit/history-panel";
 import { formatGramsAsKilograms } from "@/lib/kilograms";
 import type { PalletDetail } from "@/lib/services/pallet-set-input";
 
@@ -54,6 +55,9 @@ export function PalletTable({
             <th scope="col" className={headerClassName}>
               נטו (ק״ג)
             </th>
+            <th scope="col" className={headerClassName}>
+              היסטוריה
+            </th>
             {canRemove ? (
               <th scope="col" className={headerClassName}>
                 הסרה
@@ -89,6 +93,13 @@ export function PalletTable({
               </td>
               <td className={cellClassName}>
                 <NumberText value={formatGramsAsKilograms(pallet.netWeightGrams)} />
+              </td>
+              <td className={cellClassName}>
+                <HistoryPanel
+                  subjectType="pallet"
+                  subjectId={pallet.id}
+                  accessibleName={`היסטוריה של משטח ${"\u200E"}${pallet.palletNumber}`}
+                />
               </td>
               {canRemove ? (
                 <td className={cellClassName}>

@@ -4,7 +4,7 @@
 > Keep this under ~150 lines. Edit in place; do not turn it into a changelog.
 > Never put secrets, credentials, or server addresses here.
 
-Last updated: 2026-11-03
+Last updated: 2026-11-07
 
 ## What this app is
 
@@ -34,6 +34,7 @@ Users and roles: pallet intake uses `access_grants` (global read or write, growe
 - Pallet intake task 3 is built: set services, `scopeForSets`, audit writes, and the voided tare update.
 - Pallet intake task 4 is built: מיון ראשוני list with a bottom pallet glimpse, detail, one-pallet add and remove, void, the voided list, a header-only new set, and a kind change. Name fields are a five-result search. The app header has home and the screens the user can open. `/api/v1` still waits on an API-key decision.
 - Pallet intake task 5 is built: `/app/pallet-sets/new` and `/app/pallet-sets/[id]/edit` share a keyboard grid. One submit creates the set with its rows, or updates the header when it changed and sends one add/update/remove call for the rows that changed. The live preview uses the tares loaded with the form and does not clamp. Detail links to edit. There is no home tile for edit.
+- Pallet intake task 6 is built: היסטוריה on a set, on each pallet, and on a selected reference row. The panel loads at most 50 events, and only after it is opened. The list and the detail’s first load do not read the audit tables.
 
 ## Architecture map
 
@@ -56,11 +57,11 @@ What exists now:
 - `db/migrations/0001_nosy_the_call.sql` : applied locally. Auth migration `0000_auth.sql` is unchanged. `0002_flat_bloodstorm.sql` is applied locally: package tare is nullable, and net weight and recommended package count are optional columns. `0003_pallet_sets.sql` is applied locally and only creates the pallet and audit tables.
 - `lib/access.ts` : cached `getActor`, reference read/write checks, `scopeForSets`, and `canWriteSet`. No grant rows means no access.
 - `lib/services/reference-data.ts` : the only writer for the four reference tables. A tare change updates voided pallets in the same transaction and writes one `tare_changed` audit event.
-- `lib/services/pallet-sets.ts` : list, detail, reference lookup, create, header update, pallet changes, void, and the set-form grower list. `lib/pallet-sets/kinds.ts` and `lib/pallet-sets/net-weight.ts` have no database import.
+- `lib/services/pallet-sets.ts` : list, detail, reference lookup, create, header update, pallet changes, void, and the set-form grower list. `lib/services/audit.ts` reads one subject’s history after the visibility check. `lib/pallet-sets/kinds.ts` and `lib/pallet-sets/net-weight.ts` have no database import.
 - `lib/kilograms.ts` : kilogram text to integer grams, no `server-only` import
 - `components/ui/launcher-tile.tsx` : the shared launcher tile
 - `app/app/page.tsx` : launcher. Tiles are טבלאות and, when the actor can read sets, מיון ראשוני.
-- `app/app/pallet-sets/` : active list with `selected` glimpse, voided list, new set with the grid, detail, and `[id]/edit`. Feature UI is in `features/pallet-sets/`. Actions call the pallet-set services. `components/app-nav.tsx` is the header menu.
+- `app/app/pallet-sets/` : active list with `selected` glimpse, voided list, new set with the grid, detail, and `[id]/edit`. Feature UI is in `features/pallet-sets/`. `features/audit/history-panel.tsx` is on the set detail, each pallet, and the selected reference row. It is not on the list. Actions call the pallet-set services. `components/app-nav.tsx` is the header menu.
 - `app/app/tables/page.tsx` and the four table screens under `app/app/`. Each table is a condensed list; details and editing open for the selected row.
 - `db/migrations/0000_auth.sql` : the applied auth migration. Ids are `text`. Timestamps are `timestamp` without time zone.
 - `lib/auth.ts` : server-only Better Auth instance. Public sign-up disabled unless this process sets `BOOTSTRAP_SIGN_UP=1` outside production. `nextCookies()` is the only plugin.
@@ -106,6 +107,7 @@ What exists now:
 - 2026-11-02 Pallet-set screens send the loaded revision through Server Actions. Detail is `getPalletSet`. Kind labels are כניסה למיון ראשוני, כניסה למיון סופי, and העברה למיון סופי. A kind, grower, or date change saves on commit. Creating a missing name returns only to an `/app/pallet-sets` path. Dark-mode `danger` is `#D46E66`.
 - 2026-11-03 A signed-in request for `/` redirects to `/app`. The public home reads the session, so that route is dynamic.
 - 2026-11-03 The entry grid previews with the tares loaded on the form and saves through `createPalletSet` or one `changePallets` call. The client does not send net weight or tare. A header change and a pallet change are two service calls; the header runs first, and a failed pallet save returns the new revision.
+- 2026-11-07 History is a separate limited read. A removed pallet stays on the set history. Opening that pallet id after the live row is gone returns `NOT_FOUND`, the same as a hidden set.
 
 ## Conventions not obvious from the code
 
@@ -137,9 +139,8 @@ From the 2026-10-28 foundation audit. Not changed by the fixes applied that day:
 
 ## Next up
 
-1. Pallet-set history, `docs/project/tasks/13-pallet-set-history.md`. Do not start it until asked.
-2. API-key decision before any `/api/v1` route.
-3. Deployment plan for the deferred items above.
+1. API-key decision before any `/api/v1` route.
+2. Deployment plan for the deferred items above.
 
 ## Commands
 

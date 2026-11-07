@@ -3,6 +3,8 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import type { AuditSubjectType } from "@/db/schema/audit";
+import { HistoryPanel } from "@/features/audit/history-panel";
 import { cn } from "@/lib/utils";
 
 import type { ReferenceActionState } from "./action-state";
@@ -33,6 +35,7 @@ type ReferenceMasterDetailProps = {
   prefillName?: string;
   returnTo?: string;
   createdField?: string;
+  historySubjectType: AuditSubjectType;
 };
 
 const rowButtonClassName =
@@ -52,6 +55,7 @@ export function ReferenceMasterDetail({
   prefillName,
   returnTo,
   createdField,
+  historySubjectType,
 }: ReferenceMasterDetailProps): ReactNode {
   const filterId = useId();
   const panelRef = useRef<HTMLElement>(null);
@@ -181,6 +185,12 @@ export function ReferenceMasterDetail({
               tareRequired={tareRequired}
               hasInventory={hasInventory}
               hasPackageMeasures={hasPackageMeasures}
+            />
+            <HistoryPanel
+              key={selectedRow.id}
+              subjectType={historySubjectType}
+              subjectId={selectedRow.id}
+              accessibleName={`היסטוריה של ${selectedRow.name}`}
             />
           </>
         ) : (

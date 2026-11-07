@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { BackLink } from "@/components/ui/back-link";
+import { HistoryPanel } from "@/features/audit/history-panel";
 import { canWriteReference, canWriteSet, getActor } from "@/lib/access";
 import type { Actor } from "@/lib/access-types";
 import { PALLET_KIND_LABELS } from "@/lib/pallet-sets/kinds";
@@ -105,6 +106,11 @@ export async function PalletSetDetailPage({
           </>
         )}
       </div>
+      <HistoryPanel
+        subjectType="pallet_set"
+        subjectId={set.id}
+        accessibleName="היסטוריה של הסט"
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight">משטחים</h2>
         {canChange ? (

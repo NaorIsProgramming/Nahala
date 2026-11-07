@@ -1,6 +1,6 @@
 # 13 — History screen
 
-Status: not started. Pallet-intake task 6. Depends on 12. API routes stay blocked.
+Status: done. Pallet-intake task 6. Depends on 12. API routes stay blocked.
 
 ## Goal
 
