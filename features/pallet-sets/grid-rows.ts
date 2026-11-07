@@ -72,10 +72,27 @@ export function rowCopiedFrom(previous: GridRow, key: string): GridRow {
   };
 }
 
-/** One new pallet with the same values, except a new id and an empty pallet number. */
-export function duplicateGridRow(source: GridRow, key: string): GridRow {
+/**
+ * Pallet number for a clone. The first copy is the source plus one,
+ * the second is the source plus two, and so on.
+ */
+export function clonedPalletNumber(source: string, offset: number): string {
+  if (!/^\d+$/.test(source.trim()) || !Number.isInteger(offset) || offset < 1) {
+    return "";
+  }
+  const parsed = Number(source);
+  const next = parsed + offset;
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || !Number.isSafeInteger(next)) {
+    return "";
+  }
+  return String(next);
+}
+
+/** One new pallet with the same values, a new id, and the given pallet number. */
+export function duplicateGridRow(source: GridRow, key: string, palletNumber: string): GridRow {
   return {
     ...rowCopiedFrom(source, key),
+    palletNumber,
     grossWeightKilograms: source.grossWeightKilograms,
   };
 }

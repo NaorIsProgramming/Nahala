@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { netWeightNegative } from "@/lib/services/pallet-set-input";
 
 import {
+  clonedPalletNumber,
   gridRowFromSaved,
   gridRowsFromRecord,
   GRID_ROW_COUNT,
@@ -69,6 +70,12 @@ describe("pallet grid rows", () => {
   it("replaces the package amount only when the new type has a recommendation", () => {
     expect(packageAmountForType("12", 30)).toBe("30");
     expect(packageAmountForType("12", null)).toBe("12");
+  });
+
+  it("numbers clones one and two above the selected pallet", () => {
+    expect(clonedPalletNumber("15", 1)).toBe("16");
+    expect(clonedPalletNumber("15", 2)).toBe("17");
+    expect(clonedPalletNumber("", 1)).toBe("");
   });
 
   it("copies types and amount into a new row and leaves the number and gross empty", () => {

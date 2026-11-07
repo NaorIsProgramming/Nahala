@@ -186,6 +186,12 @@ export function NameSearch({
       onHorizontalArrow(event.key === "ArrowLeft");
       return;
     }
+    if (event.key === "Escape" && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      return;
+    }
     if (event.key === "Enter") {
       if (onEnter) {
         event.preventDefault();

@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 
 import type { PalletSetActionField } from "./action-state";
 import {
   compactDangerButtonClassName,
+  fieldClassName,
   secondaryButtonClassName,
 } from "./classes";
 import {
+  clonedPalletNumber,
   duplicateGridRow,
   emptyGridRow,
   GRID_ROW_COUNT,
@@ -21,6 +30,7 @@ import {
 import { PalletGridRow } from "./pallet-grid-row";
 
 const COLUMN_COUNT = 6;
+const MAX_CLONES = 50;
 
 const headerClassName =
   "sticky top-0 z-10 border-b border-input/40 bg-surface px-2 py-1.5 text-base font-medium text-foreground";
@@ -69,6 +79,7 @@ export function PalletGrid({
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [selectedIndexes, setSelectedIndexes] = useState<number[] | null>(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [cloneCount, setCloneCount] = useState("1");
   useEffect(() => {
     if (focusRow.current === null) {
       return;
@@ -215,19 +226,29 @@ export function PalletGrid({
     removeIndexes(indexes);
   }
 
-  function copyOneSelected(): void {
-    if (selectedIndexes === null || selectedIndexes.length === 0) {
+  const singleRowIndex =
+    selectedIndexes !== null && selectedIndexes.length === 1
+      ? selectedIndexes[0]
+      : selectedIndexes === null
+        ? focusedIndex
+        : null;
+
+  function copyFocusedPallet(): void {
+    const sourceIndex = singleRowIndex;
+    const count = readCloneCount(cloneCount);
+    const source = sourceIndex === undefined || sourceIndex === null ? undefined : rows[sourceIndex];
+    if (source === undefined || sourceIndex === undefined || sourceIndex === null || count === null) {
       return;
     }
-    const anchor = selectionAnchor.current;
-    const sourceIndex =
-      anchor !== null && selectedIndexes.includes(anchor) ? anchor : selectedIndexes[0];
-    const source = sourceIndex === undefined ? undefined : rows[sourceIndex];
-    if (source === undefined || sourceIndex === undefined) {
-      return;
-    }
+    const copies = Array.from({ length: count }, (_, offset) =>
+      duplicateGridRow(
+        source,
+        crypto.randomUUID(),
+        clonedPalletNumber(source.palletNumber, offset + 1),
+      ),
+    );
     const next = [...rows];
-    next.splice(sourceIndex + 1, 0, duplicateGridRow(source, crypto.randomUUID()));
+    next.splice(sourceIndex + 1, 0, ...copies);
     setSelectedIndexes(null);
     setConfirmingRemove(false);
     setFocusedIndex(sourceIndex + 1);
@@ -235,8 +256,22 @@ export function PalletGrid({
     onRowsChange(next);
   }
 
+  function clearMultiSelection(): void {
+    setSelectedIndexes(null);
+    setConfirmingRemove(false);
+    selectionAnchor.current = focusedIndex;
+  }
+
+  function handleGridKeyDown(event: ReactKeyboardEvent<HTMLDivElement>): void {
+    if (event.key !== "Escape" || selectedIndexes === null || selectedIndexes.length < 2) {
+      return;
+    }
+    event.preventDefault();
+    clearMultiSelection();
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" onKeyDown={handleGridKeyDown}>
       <input type="hidden" name={GRID_ROW_COUNT} value={rows.length} />
       {rows.length === 0 ? (
         <p className="text-base leading-normal text-muted">אין שורות בטבלה.</p>
@@ -338,9 +373,34 @@ export function PalletGrid({
           </table>
         </div>
       )}
-      {selectedIndexes !== null && selectedIndexes.length === 1 ? (
+      {singleRowIndex !== null && singleRowIndex !== undefined ? (
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" className={secondaryButtonClassName} onClick={copyOneSelected}>
+          <label htmlFor="pallet-clone-count" className="text-base font-medium text-foreground">
+            פעמים
+          </label>
+          <input
+            id="pallet-clone-count"
+            value={cloneCount}
+            inputMode="numeric"
+            autoComplete="off"
+            dir="ltr"
+            onChange={(event) => {
+              setCloneCount(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                copyFocusedPallet();
+              }
+            }}
+            className={`${fieldClassName} w-20 tabular-nums`}
+          />
+          <button
+            type="button"
+            className={secondaryButtonClassName}
+            disabled={readCloneCount(cloneCount) === null || pending}
+            onClick={copyFocusedPallet}
+          >
             העתקת משטח
           </button>
         </div>
@@ -417,6 +477,17 @@ export function PalletGrid({
       )}
     </div>
   );
+}
+
+function readCloneCount(value: string): number | null {
+  if (!/^\d+$/.test(value.trim())) {
+    return null;
+  }
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 1 || count > MAX_CLONES) {
+    return null;
+  }
+  return count;
 }
 
 function focusCell(row: number, column: number): void {

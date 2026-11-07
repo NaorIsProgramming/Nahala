@@ -113,6 +113,7 @@ What exists now:
 - Schemas for user-submitted data omit or allowlist server-controlled fields (id, timestamps, userId, role).
 - Security audit procedure lives in `.cursor/rules/security-audit.mdc` (invoke with `@security-audit`).
 - The UI is Hebrew and RTL (`lang="he" dir="rtl"`), with light and dark themes. All UI follows `.cursor/rules/brand-design.mdc`, the tokens in `app/brand.css`, and the logo files in `public/brand/`. User-facing text is Hebrew; code, identifiers and API field names are English.
+- Tabular editing (the pallet grid, and later grids) follows `docs/project/tabular-ui.md`.
 - Every action available in the GUI (creating pallets and sorting stages, reports, etc.) must also be available through the API (`/api/v1`). Business logic lives once, in plain functions in `lib/services/` (one file per domain area); the UI and API entry points are thin wrappers. Details are in the "Services and API parity" section of `.cursor/rules/nextjs-react-tailwind-ts.mdc`.
 
 ## Known issues and risks
